@@ -51,7 +51,6 @@ async def ingest_station(wmo_id: int):
     try:
         response = requests.get(url)
         data = response.json()
-        # Save to DB (basic example)
         conn = await asyncpg.connect(DATABASE_URL)
         await conn.execute("""
             INSERT INTO raw_observations (station_wmo, raw_json)
