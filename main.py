@@ -1,10 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from dotenv import load_dotenv
-import os
 from ftplib import FTP
-
-load_dotenv()
 
 app = FastAPI(title="RawRadar")
 
@@ -40,11 +36,11 @@ def ftp_browser(path: str = ""):
         if not path:
             path = "/anon/home/ncc/www"
 
-        # Go up button
-        parent_path = "/".join(path.rstrip("/").split("/")[:-1]) if path != "/anon/home/ncc/www" else ""
-        go_up_html = ""
-        if parent_path:
-            go_up_html = f'<a href="/ftp?path={parent_path}" class="inline-flex items-center gap-x-2 mb-4 text-sky-400 hover:underline">↑ Go to Parent Directory</a>'
+        # Build parent path
+        parent = ""
+        if path != "/anon/home/ncc/www":
+            parts = path.rstrip("/").split("/")
+            parent = "/".join(parts[:-1]) if len(parts) > 1 else "/anon/home/ncc/www"
 
         ftp.cwd(path)
         items = []
@@ -60,17 +56,23 @@ def ftp_browser(path: str = ""):
         </head>
         <body class="bg-zinc-950 text-zinc-200">
             <div class="max-w-6xl mx-auto p-8">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold">BOM FTP Browser</h1>
                     <a href="/" class="text-sky-400 hover:underline">← Back to Home</a>
                 </div>
 
-                {go_up_html}
+                <div class="mb-4">
+        """
+
+        if parent:
+            html += f'<a href="/ftp?path={parent}" class="inline-block mb-4 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm">↑ Go Up</a>'
+
+        html += f"""
+                </div>
 
                 <div class="bg-zinc-900 rounded-3xl p-6 border border-white/10">
-                    <div class="mb-4 text-sm text-zinc-400 font-mono">Current path: {path}</div>
-                    
-                    <div class="space-y-1 text-sm">
+                    <div class="text-sm text-zinc-400 mb-4 font-mono">Current path: {path}</div>
+                    <div class="space-y-1">
         """
 
         for item in items:
@@ -80,8 +82,8 @@ def ftp_browser(path: str = ""):
                 is_dir = item.startswith('d')
                 icon = "📁" if is_dir else "📄"
                 if is_dir:
-                    link = f"/ftp?path={path}/{name}"
-                    html += f'<a href="{link}" class="block px-4 py-2 hover:bg-white/5 rounded-xl">{icon} {name}</a>'
+                    new_path = f"{path}/{name}".replace("//", "/")
+                    html += f'<a href="/ftp?path={new_path}" class="block px-4 py-2 hover:bg-white/5 rounded-xl">{icon} {name}</a>'
                 else:
                     html += f'<div class="px-4 py-2 text-zinc-400">{icon} {name}</div>'
 
