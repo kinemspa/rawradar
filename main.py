@@ -11,6 +11,12 @@ app = FastAPI(title="RawRadar - Raw Weather Observations")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+    "Referer": "http://www.bom.gov.au/"
+}
+
 @app.get("/", response_class=HTMLResponse)
 def root():
     return """
@@ -72,9 +78,14 @@ def setup_db():
 def ingest_station(wmo_id: int):
     url = f"http://www.bom.gov.au/fwo/IDV60901/IDV60901.{wmo_id}.json"
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=15)
+        
         if response.status_code != 200:
-            return {"status": "error", "detail": f"BOM returned status {response.status_code}", "response": response.text[:200]}
+            return {
+                "status": "error", 
+                "detail": f"BOM returned status {response.status_code}",
+                "response": response.text[:300]
+            }
         
         data = response.json()
         
