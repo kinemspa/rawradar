@@ -16,8 +16,8 @@ def root():
     return """
     <h1>RawRadar</h1>
     <p>Tracking original weather data.</p>
-    <button onclick="window.location.href='/setup'">Setup Database Table</button><br><br>
-    <button onclick="window.location.href='/ingest/station/95936'">Fetch Melbourne Raw Data</button>
+    <button onclick="window.location.href='/setup'">1. Setup Database Table</button><br><br>
+    <button onclick="window.location.href='/ingest/station/95936'">2. Fetch Melbourne Raw Data</button>
     """
 
 @app.get("/health")
