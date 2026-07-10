@@ -3,7 +3,9 @@ from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 import os
 import psycopg2
+import psycopg2.extras
 import requests
+import json
 
 load_dotenv()
 
@@ -81,11 +83,7 @@ def ingest_station(wmo_id: int):
         response = requests.get(url, headers=headers, timeout=15)
         
         if response.status_code != 200:
-            return {
-                "status": "error", 
-                "detail": f"BOM returned status {response.status_code}",
-                "response": response.text[:300]
-            }
+            return {"status": "error", "detail": f"BOM returned status {response.status_code}"}
         
         data = response.json()
         
@@ -94,7 +92,7 @@ def ingest_station(wmo_id: int):
         cur.execute("""
             INSERT INTO raw_observations (station_wmo, raw_json)
             VALUES (%s, %s)
-        """, (wmo_id, data))
+        """, (wmo_id, psycopg2.extras.Json(data)))
         conn.commit()
         cur.close()
         conn.close()
