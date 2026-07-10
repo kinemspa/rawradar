@@ -43,7 +43,7 @@ def health():
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
-@app.post("/setup")
+@app.get("/setup")
 def setup_db():
     try:
         conn = psycopg2.connect(DATABASE_URL)
@@ -68,7 +68,7 @@ def setup_db():
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
-@app.post("/ingest/station/{wmo_id}")
+@app.get("/ingest/station/{wmo_id}")
 def ingest_station(wmo_id: int):
     url = f"http://www.bom.gov.au/fwo/IDV60901/IDV60901.{wmo_id}.json"
     try:
