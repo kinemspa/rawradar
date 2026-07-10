@@ -14,10 +14,44 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 @app.get("/", response_class=HTMLResponse)
 def root():
     return """
-    <h1>RawRadar</h1>
-    <p>Tracking original weather data.</p>
-    <button onclick="window.location.href='/setup'">1. Setup Database Table</button><br><br>
-    <button onclick="window.location.href='/ingest/station/95936'">2. Fetch Melbourne Raw Data</button>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>RawRadar</title>
+        <style>
+            body {
+                background-color: #0f0f0f;
+                color: #e0e0e0;
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 50px;
+            }
+            h1 {
+                color: #00d4ff;
+            }
+            button {
+                background-color: #1f1f1f;
+                color: #00d4ff;
+                border: 1px solid #00d4ff;
+                padding: 15px 30px;
+                font-size: 18px;
+                margin: 10px;
+                cursor: pointer;
+                border-radius: 8px;
+            }
+            button:hover {
+                background-color: #00d4ff;
+                color: #0f0f0f;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>RawRadar</h1>
+        <p>Tracking original weather data.</p>
+        <button onclick="window.location.href='/setup'">1. Setup Database Table</button><br>
+        <button onclick="window.location.href='/ingest/station/95936'">2. Fetch Melbourne Raw Data</button>
+    </body>
+    </html>
     """
 
 @app.get("/health")
