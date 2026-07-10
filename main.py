@@ -72,8 +72,12 @@ def setup_db():
 def ingest_station(wmo_id: int):
     url = f"http://www.bom.gov.au/fwo/IDV60901/IDV60901.{wmo_id}.json"
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
+        if response.status_code != 200:
+            return {"status": "error", "detail": f"BOM returned status {response.status_code}", "response": response.text[:200]}
+        
         data = response.json()
+        
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         cur.execute("""
@@ -83,6 +87,7 @@ def ingest_station(wmo_id: int):
         conn.commit()
         cur.close()
         conn.close()
-        return {"status": "success", "station": wmo_id}
+        
+        return {"status": "success", "station": wmo_id, "records": len(data.get('observations', {}).get('data', []))}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
