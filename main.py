@@ -2,16 +2,12 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 import os
-import psycopg2
-import psycopg2.extras
-import requests
 from ftplib import FTP
 
 load_dotenv()
 
 app = FastAPI(title="RawRadar")
 
-# ==================== HOMEPAGE ====================
 @app.get("/", response_class=HTMLResponse)
 def homepage():
     return """
@@ -26,33 +22,29 @@ def homepage():
             <h1 class="text-6xl font-bold tracking-tighter mb-2">RawRadar</h1>
             <p class="text-xl text-zinc-400 mb-10">Raw Weather Data Platform</p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="/data" class="block bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-3xl p-8">
-                    <div class="text-3xl mb-4">📊</div>
-                    <div class="text-2xl font-semibold">View Data</div>
-                    <div class="text-zinc-400 mt-1">Browse stored observations</div>
-                </a>
-
-                <a href="/ftp" class="block bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-3xl p-8">
-                    <div class="text-3xl mb-4">🗂️</div>
-                    <div class="text-2xl font-semibold">Historical FTP Browser</div>
-                    <div class="text-zinc-400 mt-1">Browse & download from BOM FTP</div>
-                </a>
+            <div class="flex gap-4">
+                <a href="/data" class="bg-zinc-900 hover:bg-zinc-800 border border-white/10 px-8 py-4 rounded-3xl">View Data</a>
+                <a href="/ftp" class="bg-zinc-900 hover:bg-zinc-800 border border-white/10 px-8 py-4 rounded-3xl">Historical FTP Browser</a>
             </div>
         </div>
     </body>
     </html>
     """
 
-# ==================== FTP BROWSER ====================
 @app.get("/ftp", response_class=HTMLResponse)
 def ftp_browser(path: str = ""):
     try:
         ftp = FTP('ftp.bom.gov.au')
-        ftp.login()  # Anonymous login
+        ftp.login()
 
         if not path:
             path = "/anon/home/ncc/www"
+
+        # Go up button
+        parent_path = "/".join(path.rstrip("/").split("/")[:-1]) if path != "/anon/home/ncc/www" else ""
+        go_up_html = ""
+        if parent_path:
+            go_up_html = f'<a href="/ftp?path={parent_path}" class="inline-flex items-center gap-x-2 mb-4 text-sky-400 hover:underline">↑ Go to Parent Directory</a>'
 
         ftp.cwd(path)
         items = []
@@ -72,33 +64,29 @@ def ftp_browser(path: str = ""):
                     <h1 class="text-3xl font-bold">BOM FTP Browser</h1>
                     <a href="/" class="text-sky-400 hover:underline">← Back to Home</a>
                 </div>
-                
+
+                {go_up_html}
+
                 <div class="bg-zinc-900 rounded-3xl p-6 border border-white/10">
-                    <div class="mb-4 text-sm text-zinc-400">Current path: <span class="font-mono">{path}</span></div>
+                    <div class="mb-4 text-sm text-zinc-400 font-mono">Current path: {path}</div>
                     
-                    <div class="space-y-1">
+                    <div class="space-y-1 text-sm">
         """
 
         for item in items:
-            parts = item.split()
+            parts = item.split(maxsplit=8)
             if len(parts) >= 9:
-                name = ' '.join(parts[8:])
+                name = parts[8]
                 is_dir = item.startswith('d')
                 icon = "📁" if is_dir else "📄"
-                link = f"/ftp?path={path}/{name}" if is_dir else "#"
-                html += f"""
-                    <a href="{link}" class="flex items-center gap-x-3 px-4 py-2 hover:bg-white/5 rounded-xl">
-                        <span>{icon}</span>
-                        <span class="font-mono text-sm">{name}</span>
-                    </a>
-                """
+                if is_dir:
+                    link = f"/ftp?path={path}/{name}"
+                    html += f'<a href="{link}" class="block px-4 py-2 hover:bg-white/5 rounded-xl">{icon} {name}</a>'
+                else:
+                    html += f'<div class="px-4 py-2 text-zinc-400">{icon} {name}</div>'
 
         html += """
                     </div>
-                </div>
-                
-                <div class="mt-6 text-xs text-zinc-500">
-                    Browse the BOM FTP to find historical data. Click folders to navigate.
                 </div>
             </div>
         </body>
@@ -108,5 +96,3 @@ def ftp_browser(path: str = ""):
 
     except Exception as e:
         return {"status": "error", "detail": str(e)}
-
-# Keep other routes (setup, ingest, data, health) here if needed...
