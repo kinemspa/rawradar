@@ -510,7 +510,7 @@ async function init() {
     if (sts.error) throw new Error(sts.error);
     const sel = $id('stn');
     sel.innerHTML = sts.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    const good = ["009021","004032","014015","031011","040004","037010","011052","015590","072150","096003","039083"];
+    const good = ["066214","086338","040842","009021","031011","014015","023000","094029","070351"];
     const gs = sts.find(s => good.includes(s.id));
     if (gs) { sel.value = gs.id; loadData(); }
   } catch(e) {
