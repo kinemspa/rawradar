@@ -7,18 +7,124 @@ load_dotenv()
 
 app = FastAPI(title="RawRadar")
 
-# --- Database helpers ---
-
-def get_db():
-    import psycopg2
-    url = os.getenv("DATABASE_URL")
-    if not url:
-        raise Exception("DATABASE_URL not set. Add it to Vercel Environment Variables.")
-    return psycopg2.connect(url, connect_timeout=10, sslmode="require")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ckrjeuoctaiqaicwzrjn.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 def query(sql, params=None):
-    conn = get_db()
+    if SUPABASE_KEY:
+        return _query_rest(sql, params)
+    if DATABASE_URL:
+        return _query_pg(sql, params)
+    raise Exception("No SUPABASE_KEY or DATABASE_URL set. Add either to Vercel env vars.")
+
+
+def _query_rest(sql, params=None):
+    import requests
+    table = "temperature_readings"
+    if "FROM stations" in sql or "FROM stations" in sql:
+        table = "stations"
+    q = {}
+    cols = "date,tmax,tmin,source"
+    if "id, name, source" in sql or "SELECT id, name" in sql:
+        cols = "id,name,source,latitude,longitude,elevation"
+    if "COUNT(*)" in sql:
+        cols = "source,count"
+    if "MIN(date)" in sql:
+        cols = "date"
+    if "tmax AS acorn_tmax" in sql or "FULL OUTER JOIN" in sql:
+        return _query_compare_rest(sql, params)
+    if params:
+        for i, p in enumerate(params):
+            if p in ("bom_acorn", "bom_api", "noaa_ghcn"):
+                q["source"] = f"eq.{p}"
+            elif isinstance(p, str) and len(p) == 10 and p[4] == "-":
+                if "date >= %s" in sql:
+                    q["date"] = f"gte.{p}"
+                elif "date <= %s" in sql:
+                    q["date"] = f"lte.{p}"
+                else:
+                    q["date"] = f"eq.{p}"
+            elif isinstance(p, str) and len(p) == 6 and p.isdigit():
+                q["station_id"] = f"eq.{p}"
+    order = "date.asc"
+    limit = 50000
+    import re
+    m = re.search(r"ORDER BY (\w+)\s*(ASC|DESC)?", sql)
+    if m:
+        order = m.group(1)
+        if m.group(2) == "DESC":
+            order += ".desc"
+    m2 = re.search(r"LIMIT (\d+)", sql)
+    if m2:
+        limit = min(int(m2.group(1)), 50000)
+    if "COUNT(*)" in sql:
+        url = f"{SUPABASE_URL}/rest/v1/{table}"
+        headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Prefer": "count=exact"}
+        r = requests.get(url, headers=headers, params={**q, "select": "source", "limit": "0"}, timeout=10)
+        if r.status_code == 200:
+            total = int(r.headers.get("content-range", "0/0").split("/")[-1])
+            return [(total,)]
+        raise Exception(f"Supabase error {r.status_code}")
+    if "MIN(date)" in sql:
+        headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+        first = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers,
+                             params={**q, "select": "date", "order": "date.asc", "limit": "1"}, timeout=10).json()
+        last = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers,
+                            params={**q, "select": "date", "order": "date.desc", "limit": "1"}, timeout=10).json()
+        min_d = first[0]["date"][:10] if first else None
+        max_d = last[0]["date"][:10] if last else None
+        return [(min_d, max_d)]
+    if "SELECT 1" in sql:
+        return [(1,)]
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+    r = requests.get(url, headers=headers, params={**q, "select": cols, "order": order, "limit": str(limit)}, timeout=30)
+    if r.status_code != 200:
+        raise Exception(f"Supabase error {r.status_code}: {r.text[:200]}")
+    rows = []
+    for item in r.json():
+        if cols == "id,name,source,latitude,longitude,elevation":
+            rows.append((item["id"], item["name"], item["source"], item.get("latitude"), item.get("longitude"), item.get("elevation")))
+        elif cols == "date,tmax,tmin,source":
+            rows.append((item["date"], item.get("tmax"), item.get("tmin"), item.get("source")))
+        elif cols == "source,count":
+            rows.append((item.get("source", "unknown"), 1))
+        elif cols == "date":
+            rows.append((item["date"],))
+    return rows
+
+
+def _query_compare_rest(sql, params=None):
+    import requests
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+    a = requests.get(f"{SUPABASE_URL}/rest/v1/temperature_readings",
+                     headers=headers, params={"station_id": f"eq.{params[0]}", "source": "eq.bom_acorn",
+                                              "select": "date,tmax,tmin", "order": "date.asc", "limit": "5000"}, timeout=10).json()
+    b = requests.get(f"{SUPABASE_URL}/rest/v1/temperature_readings",
+                     headers=headers, params={"station_id": f"eq.{params[0]}", "source": "eq.bom_api",
+                                              "select": "date,tmax,tmin", "order": "date.asc", "limit": "5000"}, timeout=10).json()
+    n = requests.get(f"{SUPABASE_URL}/rest/v1/temperature_readings",
+                     headers=headers, params={"station_id": f"eq.{params[0]}", "source": "eq.noaa_ghcn",
+                                              "select": "date,tmax,tmin", "order": "date.asc", "limit": "5000"}, timeout=10).json()
+    idx = {}
+    for src, pfx in [(a, "acorn"), (b, "api"), (n, "noaa")]:
+        for r in src:
+            d = r["date"]
+            if d not in idx:
+                idx[d] = {"date": d}
+            idx[d][f"{pfx}_tmax"] = r.get("tmax")
+            idx[d][f"{pfx}_tmin"] = r.get("tmin")
+    result = sorted(idx.values(), key=lambda x: x["date"])
+    return [(r["date"], r.get("acorn_tmax"), r.get("acorn_tmin"),
+             r.get("api_tmax"), r.get("api_tmin"),
+             r.get("noaa_tmax"), r.get("noaa_tmin")) for r in result]
+
+
+def _query_pg(sql, params=None):
+    import psycopg2
+    conn = psycopg2.connect(DATABASE_URL, connect_timeout=10, sslmode="require")
     cur = conn.cursor()
     cur.execute(sql, params or [])
     rows = cur.fetchall()
@@ -28,23 +134,32 @@ def query(sql, params=None):
 
 
 def check_db():
-    try:
-        rows = query("SELECT 1 AS ok")
-        return {"connected": True, "detail": "OK"}
-    except Exception as e:
-        return {"connected": False, "detail": str(e)}
+    if SUPABASE_KEY:
+        try:
+            import requests
+            r = requests.get(f"{SUPABASE_URL}/rest/v1/stations",
+                             headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
+                             params={"select": "id", "limit": "1"}, timeout=10)
+            if r.status_code == 200:
+                return {"connected": True, "method": "supabase_rest", "detail": "OK"}
+            return {"connected": False, "method": "supabase_rest", "detail": f"HTTP {r.status_code}"}
+        except Exception as e:
+            return {"connected": False, "method": "supabase_rest", "detail": str(e)}
+    if DATABASE_URL:
+        try:
+            _query_pg("SELECT 1")
+            return {"connected": True, "method": "postgres", "detail": "OK"}
+        except Exception as e:
+            return {"connected": False, "method": "postgres", "detail": str(e)}
+    return {"connected": False, "detail": "No SUPABASE_KEY or DATABASE_URL in env"}
 
-
-# --- API ---
 
 @app.get("/api/health")
 def api_health():
     db = check_db()
-    return {
-        "status": "ok" if db["connected"] else "error",
-        "database": db,
-        "python": os.environ.get("PYTHON_VERSION", "unknown"),
-    }
+    return {"status": "ok" if db["connected"] else "error", "database": db,
+            "python": os.environ.get("PYTHON_VERSION", "unknown"),
+            "method": db.get("method", "none")}
 
 
 @app.get("/api/stations")
@@ -56,14 +171,17 @@ def api_stations():
                  "lon": float(r[4]) if r[4] else None,
                  "elev": float(r[5]) if r[5] else None} for r in rows]
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e), "traceback": traceback.format_exc()})
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 @app.get("/api/counts")
 def api_counts():
     try:
         rows = query("SELECT source, COUNT(*) FROM temperature_readings GROUP BY source")
-        return {r[0]: r[1] for r in rows}
+        counts = {}
+        for r in rows:
+            counts[r[0]] = r[1]
+        return counts
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -71,12 +189,8 @@ def api_counts():
 @app.get("/api/years/{station_id}")
 def api_years(station_id: str, source: str = None):
     try:
-        params = [station_id]
-        src_clause = ""
-        if source:
-            src_clause = "AND source = %s"
-            params.append(source)
-        rows = query(f"SELECT MIN(date), MAX(date) FROM temperature_readings WHERE station_id = %s {src_clause}", params)
+        rows = query(f"SELECT MIN(date), MAX(date) FROM temperature_readings WHERE station_id = %s",
+                     [station_id])
         if rows and rows[0][0]:
             return {"min": str(rows[0][0]), "max": str(rows[0][1])}
         return {"min": None, "max": None}
@@ -100,7 +214,8 @@ def api_data(station_id: str,
         if to_date:
             clauses.append("date <= %s"); params.append(to_date)
         where = " AND ".join(clauses)
-        rows = query(f"SELECT date, tmax, tmin, source FROM temperature_readings WHERE {where} ORDER BY date LIMIT %s", (*params, limit))
+        rows = query(f"SELECT date, tmax, tmin, source FROM temperature_readings WHERE {where} ORDER BY date LIMIT %s",
+                     (*params, limit))
         return [{"date": str(r[0]), "tmax": float(r[1]) if r[1] else None,
                  "tmin": float(r[2]) if r[2] else None, "source": r[3]} for r in rows]
     except Exception as e:
@@ -110,7 +225,7 @@ def api_data(station_id: str,
 @app.get("/api/compare/{station_id}")
 def api_compare(station_id: str, from_date: str = Query(None, alias="from"), to_date: str = Query(None, alias="to")):
     try:
-        params = [station_id, station_id, station_id]
+        params = [station_id]
         dc = ""
         if from_date:
             dc += " AND COALESCE(a.date, b.date, n.date) >= %s"; params.append(from_date)
@@ -130,8 +245,6 @@ def api_compare(station_id: str, from_date: str = Query(None, alias="from"), to_
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-
-# --- Frontend ---
 
 HOME = r"""<!DOCTYPE html>
 <html lang="en">
@@ -161,10 +274,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0f;color:#e4
 
   <div class="flex-1 p-4 lg:p-6 max-w-5xl mx-auto w-full">
     <div id="error-banner" class="hidden bg-red-900/50 border border-red-500/30 rounded-2xl p-4 mb-4 text-sm"></div>
-    <div id="success-banner" class="hidden bg-emerald-900/30 border border-emerald-500/20 rounded-2xl p-3 mb-4 text-xs text-emerald-400 flex items-center gap-2">
-      <span>✓</span><span id="success-text">Connected</span>
-      <button onclick="document.getElementById('success-banner').classList.add('hidden')" class="ml-auto text-zinc-500 hover:text-zinc-300">✕</button>
-    </div>
 
     <div class="bg-zinc-900 rounded-2xl p-4 lg:p-6 mb-4 border border-white/5">
       <div class="flex flex-wrap gap-3 items-end">
@@ -227,7 +336,7 @@ async function checkHealth() {
   const btn = document.getElementById('status-btn');
   btn.classList.add('opacity-60', 'pointer-events-none');
   document.getElementById('status-text').textContent = 'Checking...';
-  document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-zinc-500 animate-pulse';
+  document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-zinc-500';
   try {
     const r = await fetch('/api/health');
     const h = await r.json();
@@ -235,47 +344,20 @@ async function checkHealth() {
     const text = document.getElementById('status-text');
     if (h.database?.connected) {
       dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-      text.textContent = 'DB Connected';
+      text.textContent = 'Connected (' + (h.method || '?') + ')';
       btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-emerald-900/30 border-emerald-700/30 text-emerald-400 hover:bg-emerald-900/50';
-      document.getElementById('load-btn').disabled = false;
-      const counts = await (await fetch('/api/counts')).catch(() => ({}));
-      const total = Object.values(counts).reduce((a,b) => a+b, 0);
-      if (total > 0) {
-        document.getElementById('success-banner').classList.remove('hidden');
-        document.getElementById('success-text').textContent = `Connected — ${total.toLocaleString()} records across ${Object.keys(counts).length} sources`;
-      } else {
-        showWarning('DB connected but 0 records found. Data may need to be ingested.');
-      }
     } else {
       dot.className = 'w-2 h-2 rounded-full bg-red-500';
-      text.textContent = 'DB Error';
+      text.textContent = 'Error';
       btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-red-900/30 border-red-700/30 text-red-400 hover:bg-red-900/50';
-      showError('Database: ' + (h.database?.detail || 'connection failed'));
+      document.getElementById('error-banner').textContent = 'DB: ' + (h.database?.detail || 'unknown');
+      document.getElementById('error-banner').classList.remove('hidden');
     }
   } catch (e) {
     document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
-    document.getElementById('status-text').textContent = 'Server Error';
+    document.getElementById('status-text').textContent = 'Error';
   }
   btn.classList.remove('opacity-60', 'pointer-events-none');
-}
-
-function showError(msg) {
-  document.getElementById('success-banner').classList.add('hidden');
-  const el = document.getElementById('error-banner');
-  el.textContent = msg;
-  el.classList.remove('hidden');
-}
-
-function showWarning(msg) {
-  document.getElementById('error-banner').classList.add('hidden');
-  const el = document.getElementById('success-banner');
-  el.classList.remove('hidden');
-  document.getElementById('success-text').textContent = msg;
-  el.className = 'bg-amber-900/30 border border-amber-500/20 rounded-2xl p-3 mb-4 text-xs text-amber-400 flex items-center gap-2';
-}
-
-function hideError() {
-  document.getElementById('error-banner').classList.add('hidden');
 }
 
 async function loadData() {
@@ -284,48 +366,28 @@ async function loadData() {
   const from = document.getElementById('from-year').value + '-01-01';
   const to = document.getElementById('to-year').value + '-12-31';
   if (!station) return;
-
-  hideError();
+  document.getElementById('error-banner').classList.add('hidden');
   document.getElementById('loading').classList.remove('hidden');
   document.getElementById('table-container').innerHTML = '';
   document.getElementById('load-btn').disabled = true;
-
   try {
     const r = await fetch(`/api/data/${station}?source=${source}&from=${from}&to=${to}&limit=50000`);
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({}));
-      throw new Error(err.error || `HTTP ${r.status}`);
-    }
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `HTTP ${r.status}`); }
     const data = await r.json();
     if (data.error) throw new Error(data.error);
-
     currentData = Array.isArray(data) ? data : [];
     currentPage = 0;
-
     const name = document.getElementById('station-select').selectedOptions[0]?.text || station;
     document.getElementById('table-title').textContent = name;
-    if (currentData.length === 0) {
-      document.getElementById('table-subtitle').textContent = 'No data for this period. Try different years or source.';
-    } else {
-      document.getElementById('table-subtitle').textContent =
-        `${currentData.length.toLocaleString()} readings — ${currentData[0].date} to ${currentData[currentData.length-1].date}`;
-    }
-    document.getElementById('record-count').textContent =
-      currentData.length > 0 ? `${currentData.length.toLocaleString()} records` : '';
+    document.getElementById('table-subtitle').textContent = currentData.length
+      ? `${currentData.length.toLocaleString()} readings \u2014 ${currentData[0].date} to ${currentData[currentData.length-1].date}`
+      : 'No data for this period. Try different years or source.';
+    document.getElementById('record-count').textContent = currentData.length ? `${currentData.length.toLocaleString()} records` : '';
     renderTable();
-
-    // Show available date range for this station
-    const yr = await fetch(`/api/years/${station}?source=${source}`);
-    const yrData = await yr.json();
-    if (yrData.min) {
-      document.getElementById('range-info').classList.remove('hidden');
-      document.getElementById('range-info').textContent =
-        `Data available: ${yrData.min} to ${yrData.max} for ${source}`;
-    }
   } catch (e) {
-    showError(e.message);
+    document.getElementById('error-banner').textContent = e.message;
+    document.getElementById('error-banner').classList.remove('hidden');
     document.getElementById('table-title').textContent = 'Error';
-    document.getElementById('table-subtitle').textContent = '';
   }
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('load-btn').disabled = false;
@@ -333,52 +395,64 @@ async function loadData() {
 
 function renderTable() {
   if (!currentData.length) {
-    document.getElementById('table-container').innerHTML =
-      '<div class="text-center py-12 text-zinc-500 text-sm">No data for this period</div>';
+    document.getElementById('table-container').innerHTML = '<div class="text-center py-12 text-zinc-500 text-sm">No data for this period</div>';
     document.getElementById('prev-btn').disabled = true;
     document.getElementById('next-btn').disabled = true;
     document.getElementById('page-info').textContent = '0';
     return;
   }
-
   const totalPages = Math.ceil(currentData.length / PAGE_SIZE);
   const start = currentPage * PAGE_SIZE;
   const end = Math.min(start + PAGE_SIZE, currentData.length);
   const page = currentData.slice(start, end);
-
   document.getElementById('prev-btn').disabled = currentPage <= 0;
   document.getElementById('next-btn').disabled = currentPage >= totalPages - 1;
   document.getElementById('page-info').textContent = `${currentPage + 1}/${totalPages}`;
-
   document.getElementById('table-container').innerHTML = `
     <table class="w-full text-xs">
-      <thead>
-        <tr class="text-zinc-500 border-b border-white/5">
-          <th class="text-left py-2.5 px-4 font-medium">Date</th>
-          <th class="text-right py-2.5 px-4 font-medium">Max Temp</th>
-          <th class="text-right py-2.5 px-4 font-medium">Min Temp</th>
-          <th class="text-right py-2.5 px-4 font-medium">Range</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${page.map(d => {
-          const range = d.tmax != null && d.tmin != null ? (d.tmax - d.tmin).toFixed(1) : '-';
-          return `<tr class="border-b border-white/5 hover:bg-white/[0.02]">
-            <td class="py-2 px-4 text-zinc-300 font-medium">${d.date}</td>
-            <td class="py-2 px-4 text-right ${d.tmax != null ? 'text-orange-400' : 'text-zinc-700'}">${d.tmax != null ? d.tmax.toFixed(1) + '\u00b0' : '-'}</td>
-            <td class="py-2 px-4 text-right ${d.tmin != null ? 'text-blue-400' : 'text-zinc-700'}">${d.tmin != null ? d.tmin.toFixed(1) + '\u00b0' : '-'}</td>
-            <td class="py-2 px-4 text-right text-zinc-500">${range}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
+      <thead><tr class="text-zinc-500 border-b border-white/5">
+        <th class="text-left py-2.5 px-4 font-medium">Date</th>
+        <th class="text-right py-2.5 px-4 font-medium">Max Temp</th>
+        <th class="text-right py-2.5 px-4 font-medium">Min Temp</th>
+        <th class="text-right py-2.5 px-4 font-medium">Range</th>
+      </tr></thead>
+      <tbody>${page.map(d => {
+        const range = d.tmax != null && d.tmin != null ? (d.tmax - d.tmin).toFixed(1) : '-';
+        return `<tr class="border-b border-white/5 hover:bg-white/[0.02]">
+          <td class="py-2 px-4 text-zinc-300 font-medium">${d.date}</td>
+          <td class="py-2 px-4 text-right ${d.tmax != null ? 'text-orange-400' : 'text-zinc-700'}">${d.tmax != null ? d.tmax.toFixed(1)+'\u00b0' : '-'}</td>
+          <td class="py-2 px-4 text-right ${d.tmin != null ? 'text-blue-400' : 'text-zinc-700'}">${d.tmin != null ? d.tmin.toFixed(1)+'\u00b0' : '-'}</td>
+          <td class="py-2 px-4 text-right text-zinc-500">${range}</td>
+        </tr>`;
+      }).join('')}</tbody>
     </table>
-    <div class="text-center text-xs text-zinc-600 py-3">
-      ${start + 1}\u2013${Math.min(end, currentData.length)} of ${currentData.length.toLocaleString()}
-    </div>`;
+    <div class="text-center text-xs text-zinc-600 py-3">${start+1}\u2013${Math.min(end, currentData.length)} of ${currentData.length.toLocaleString()}</div>`;
 }
 
 async function init() {
-  await checkHealth();
+  const btn = document.getElementById('status-btn');
+  btn.classList.add('opacity-60', 'pointer-events-none');
+  document.getElementById('status-text').textContent = 'Connecting...';
+  try {
+    const r = await fetch('/api/health');
+    const h = await r.json();
+    if (h.database?.connected) {
+      document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+      document.getElementById('status-text').textContent = 'Connected (' + (h.method || '?') + ')';
+      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-emerald-900/30 border-emerald-700/30 text-emerald-400 hover:bg-emerald-900/50';
+    } else {
+      document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
+      document.getElementById('status-text').textContent = 'Error: ' + (h.database?.detail || '');
+      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-red-900/30 border-red-700/30 text-red-400 hover:bg-red-900/50';
+      document.getElementById('error-banner').textContent = 'Database: ' + (h.database?.detail || 'unknown');
+      document.getElementById('error-banner').classList.remove('hidden');
+      document.getElementById('load-btn').disabled = true;
+    }
+  } catch (e) {
+    document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
+    document.getElementById('status-text').textContent = 'Server Error';
+  }
+  btn.classList.remove('opacity-60', 'pointer-events-none');
   try {
     const r = await fetch('/api/stations');
     const stations = await r.json();
@@ -387,14 +461,14 @@ async function init() {
     select.innerHTML = stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     if (stations.length > 0) loadData();
   } catch (e) {
-    showError('Failed to load stations: ' + e.message);
+    document.getElementById('error-banner').textContent = 'Stations: ' + e.message;
+    document.getElementById('error-banner').classList.remove('hidden');
   }
 }
 
 document.getElementById('load-btn').addEventListener('click', loadData);
 document.getElementById('prev-btn').addEventListener('click', () => { if (currentPage > 0) { currentPage--; renderTable(); }});
 document.getElementById('next-btn').addEventListener('click', () => { if ((currentPage + 1) * PAGE_SIZE < currentData.length) { currentPage++; renderTable(); }});
-
 init();
 </script>
 </body>
