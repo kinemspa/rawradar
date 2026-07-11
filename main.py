@@ -23,7 +23,8 @@ def _query_rest(sql, params=None):
     if "FROM stations" in sql: table = "stations"
     q = {}
     cols = "date,tmax,tmin,source"
-    if "id, name, source" in sql: cols = "id,name,source,latitude,longitude,elevation"
+    if "id,name,source" in sql or "id, name, source" in sql:
+        cols = "id,name,source,latitude,longitude,elevation"
     if "COUNT(*)" in sql: return [("bom_acorn", 748696)]
     if params:
         date_idx = 0
@@ -47,8 +48,10 @@ def _query_rest(sql, params=None):
         l = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params={**q, "select":"date","order":"date.desc","limit":"1"}, timeout=10).json()
         return [(f[0]["date"][:10] if f else None, l[0]["date"][:10] if l else None)]
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers, params={**q, "select":cols, "order":order, "limit":str(limit)}, timeout=30)
-    if r.status_code != 200: raise Exception(f"Supabase error {r.status_code}")
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    r = requests.get(url, headers=headers, params={**q, "select":cols, "order":order, "limit":str(limit)}, timeout=30)
+    if r.status_code != 200:
+        raise Exception(f"Supabase error {r.status_code}")
     rows = []
     for item in r.json():
         if cols == "id,name,source,latitude,longitude,elevation":
