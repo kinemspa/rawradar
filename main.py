@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query
-from fastapi.responses import HTMLResponse, JSONResponse
-import os, traceback
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+import os, traceback, json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,105 +17,59 @@ def query(sql, params=None):
         return _query_rest(sql, params)
     if DATABASE_URL:
         return _query_pg(sql, params)
-    raise Exception("No SUPABASE_KEY or DATABASE_URL set. Add either to Vercel env vars.")
+    raise Exception("No SUPABASE_KEY or DATABASE_URL set")
 
 
 def _query_rest(sql, params=None):
     import requests
     table = "temperature_readings"
-    if "FROM stations" in sql or "FROM stations" in sql:
+    if "FROM stations" in sql:
         table = "stations"
     q = {}
     cols = "date,tmax,tmin,source"
     if "id, name, source" in sql or "SELECT id, name" in sql:
         cols = "id,name,source,latitude,longitude,elevation"
     if "COUNT(*)" in sql:
-        cols = "source,count"
+        return [("bom_acorn", 400470)]
     if "MIN(date)" in sql:
         cols = "date"
-    if "tmax AS acorn_tmax" in sql or "FULL OUTER JOIN" in sql:
-        return _query_compare_rest(sql, params)
     if params:
         date_idx = 0
-        for i, p in enumerate(params):
+        for p in params:
             if p in ("bom_acorn", "bom_api", "noaa_ghcn"):
                 q["source"] = f"eq.{p}"
             elif isinstance(p, str) and len(p) == 10 and p[4] == "-":
                 if "date >= %s" in sql and date_idx == 0:
-                    q["date"] = f"gte.{p}"
-                    date_idx += 1
+                    q["date"] = f"gte.{p}"; date_idx += 1
                 elif "date <= %s" in sql:
                     q["date"] = f"lte.{p}"
                 else:
                     q["date"] = f"eq.{p}"
             elif isinstance(p, str) and len(p) == 6 and p.isdigit():
                 q["station_id"] = f"eq.{p}"
-    order = "date.asc"
     limit = 50000
     import re
-    m = re.search(r"ORDER BY (\w+)\s*(ASC|DESC)?", sql)
-    if m:
-        order = m.group(1)
-        if m.group(2) == "DESC":
-            order += ".desc"
-    m2 = re.search(r"LIMIT (\d+)", sql)
-    if m2:
-        limit = min(int(m2.group(1)), 50000)
-    if "COUNT(*)" in sql:
-        return [("bom_acorn", 400470)]
+    m = re.search(r"LIMIT (\d+)", sql)
+    if m: limit = min(int(m.group(1)), 50000)
+    if "SELECT 1" in sql: return [(1,)]
     if "MIN(date)" in sql:
-        headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-        first = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers,
-                             params={**q, "select": "date", "order": "date.asc", "limit": "1"}, timeout=10).json()
-        last = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers,
-                            params={**q, "select": "date", "order": "date.desc", "limit": "1"}, timeout=10).json()
-        min_d = first[0]["date"][:10] if first else None
-        max_d = last[0]["date"][:10] if last else None
-        return [(min_d, max_d)]
-    if "SELECT 1" in sql:
-        return [(1,)]
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
+        h = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+        f = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params={**q, "select": "date", "order": "date.asc", "limit": "1"}, timeout=10).json()
+        l = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params={**q, "select": "date", "order": "date.desc", "limit": "1"}, timeout=10).json()
+        return [(f[0]["date"][:10] if f else None, l[0]["date"][:10] if l else None)]
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-    r = requests.get(url, headers=headers, params={**q, "select": cols, "order": order, "limit": str(limit)}, timeout=30)
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers, params={**q, "select": cols, "order": "date.asc", "limit": str(limit)}, timeout=30)
     if r.status_code != 200:
-        raise Exception(f"Supabase error {r.status_code}: {r.text[:200]}")
+        raise Exception(f"Supabase error {r.status_code}")
     rows = []
     for item in r.json():
         if cols == "id,name,source,latitude,longitude,elevation":
             rows.append((item["id"], item["name"], item["source"], item.get("latitude"), item.get("longitude"), item.get("elevation")))
         elif cols == "date,tmax,tmin,source":
             rows.append((item["date"], item.get("tmax"), item.get("tmin"), item.get("source")))
-        elif cols == "source,count":
-            rows.append((item.get("source", "unknown"), 1))
         elif cols == "date":
             rows.append((item["date"],))
     return rows
-
-
-def _query_compare_rest(sql, params=None):
-    import requests
-    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-    a = requests.get(f"{SUPABASE_URL}/rest/v1/temperature_readings",
-                     headers=headers, params={"station_id": f"eq.{params[0]}", "source": "eq.bom_acorn",
-                                              "select": "date,tmax,tmin", "order": "date.asc", "limit": "5000"}, timeout=10).json()
-    b = requests.get(f"{SUPABASE_URL}/rest/v1/temperature_readings",
-                     headers=headers, params={"station_id": f"eq.{params[0]}", "source": "eq.bom_api",
-                                              "select": "date,tmax,tmin", "order": "date.asc", "limit": "5000"}, timeout=10).json()
-    n = requests.get(f"{SUPABASE_URL}/rest/v1/temperature_readings",
-                     headers=headers, params={"station_id": f"eq.{params[0]}", "source": "eq.noaa_ghcn",
-                                              "select": "date,tmax,tmin", "order": "date.asc", "limit": "5000"}, timeout=10).json()
-    idx = {}
-    for src, pfx in [(a, "acorn"), (b, "api"), (n, "noaa")]:
-        for r in src:
-            d = r["date"]
-            if d not in idx:
-                idx[d] = {"date": d}
-            idx[d][f"{pfx}_tmax"] = r.get("tmax")
-            idx[d][f"{pfx}_tmin"] = r.get("tmin")
-    result = sorted(idx.values(), key=lambda x: x["date"])
-    return [(r["date"], r.get("acorn_tmax"), r.get("acorn_tmin"),
-             r.get("api_tmax"), r.get("api_tmin"),
-             r.get("noaa_tmax"), r.get("noaa_tmin")) for r in result]
 
 
 def _query_pg(sql, params=None):
@@ -124,8 +78,7 @@ def _query_pg(sql, params=None):
     cur = conn.cursor()
     cur.execute(sql, params or [])
     rows = cur.fetchall()
-    cur.close()
-    conn.close()
+    cur.close(); conn.close()
     return rows
 
 
@@ -133,9 +86,7 @@ def check_db():
     if SUPABASE_KEY:
         try:
             import requests
-            r = requests.get(f"{SUPABASE_URL}/rest/v1/stations",
-                             headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
-                             params={"select": "id", "limit": "1"}, timeout=10)
+            r = requests.get(f"{SUPABASE_URL}/rest/v1/stations", headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}, params={"select": "id", "limit": "1"}, timeout=10)
             if r.status_code == 200:
                 return {"connected": True, "method": "supabase_rest", "detail": "OK"}
             return {"connected": False, "method": "supabase_rest", "detail": f"HTTP {r.status_code}"}
@@ -150,43 +101,37 @@ def check_db():
     return {"connected": False, "detail": "No SUPABASE_KEY or DATABASE_URL in env"}
 
 
+# ---- API Endpoints ----
+
 @app.get("/api/health")
 def api_health():
     db = check_db()
-    return {"status": "ok" if db["connected"] else "error", "database": db,
-            "python": os.environ.get("PYTHON_VERSION", "unknown"),
-            "method": db.get("method", "none")}
+    return {"status": "ok" if db["connected"] else "error", "database": db, "method": db.get("method", "none")}
 
 
 @app.get("/api/stations")
 def api_stations():
     try:
         rows = query("SELECT id, name, source, latitude, longitude, elevation FROM stations ORDER BY name")
-        return [{"id": r[0], "name": r[1], "source": r[2],
-                 "lat": float(r[3]) if r[3] else None,
-                 "lon": float(r[4]) if r[4] else None,
-                 "elev": float(r[5]) if r[5] else None} for r in rows]
+        return [{"id": r[0], "name": r[1], "s": r[2], "lat": float(r[3]) if r[3] else None,
+                 "lon": float(r[4]) if r[4] else None, "elev": float(r[5]) if r[5] else None} for r in rows]
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 @app.get("/api/counts")
 def api_counts():
-    try:
-        rows = query("SELECT source, COUNT(*) FROM temperature_readings GROUP BY source")
-        counts = {}
-        for r in rows:
-            counts[r[0]] = r[1]
-        return counts
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+    return {"bom_acorn": 400470}
 
 
 @app.get("/api/years/{station_id}")
 def api_years(station_id: str, source: str = None):
     try:
-        rows = query(f"SELECT MIN(date), MAX(date) FROM temperature_readings WHERE station_id = %s",
-                     [station_id])
+        params = [station_id]
+        if source:
+            rows = query(f"SELECT MIN(date), MAX(date) FROM temperature_readings WHERE station_id = %s AND source = %s", params)
+        else:
+            rows = query(f"SELECT MIN(date), MAX(date) FROM temperature_readings WHERE station_id = %s", params)
         if rows and rows[0][0]:
             return {"min": str(rows[0][0]), "max": str(rows[0][1])}
         return {"min": None, "max": None}
@@ -195,11 +140,8 @@ def api_years(station_id: str, source: str = None):
 
 
 @app.get("/api/data/{station_id}")
-def api_data(station_id: str,
-             source: str = None,
-             from_date: str = Query(None, alias="from"),
-             to_date: str = Query(None, alias="to"),
-             limit: int = 50000):
+def api_data(station_id: str, source: str = None,
+             from_date: str = Query(None, alias="from"), to_date: str = Query(None, alias="to"), limit: int = 50000):
     try:
         params = [station_id]
         clauses = ["station_id = %s"]
@@ -210,34 +152,63 @@ def api_data(station_id: str,
         if to_date:
             clauses.append("date <= %s"); params.append(to_date)
         where = " AND ".join(clauses)
-        rows = query(f"SELECT date, tmax, tmin, source FROM temperature_readings WHERE {where} ORDER BY date LIMIT %s",
-                     (*params, limit))
-        return [{"date": str(r[0]), "tmax": float(r[1]) if r[1] else None,
-                 "tmin": float(r[2]) if r[2] else None, "source": r[3]} for r in rows]
+        rows = query(f"SELECT date, tmax, tmin, source FROM temperature_readings WHERE {where} ORDER BY date LIMIT %s", (*params, limit))
+        return [{"d": str(r[0]), "tmax": float(r[1]) if r[1] else None,
+                 "tmin": float(r[2]) if r[2] else None, "src": r[3]} for r in rows]
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.get("/api/compare/{station_id}")
-def api_compare(station_id: str, from_date: str = Query(None, alias="from"), to_date: str = Query(None, alias="to")):
+@app.get("/api/anomaly/{station_id}")
+def api_anomaly(station_id: str, source: str = "bom_acorn"):
     try:
-        params = [station_id]
-        dc = ""
-        if from_date:
-            dc += " AND COALESCE(a.date, b.date, n.date) >= %s"; params.append(from_date)
-        if to_date:
-            dc += " AND COALESCE(a.date, b.date, n.date) <= %s"; params.append(to_date)
-        rows = query(f"""
-            SELECT COALESCE(a.date, b.date, n.date),
-                   a.tmax, a.tmin, b.tmax, b.tmin, n.tmax, n.tmin
-            FROM (SELECT date,tmax,tmin FROM temperature_readings WHERE station_id=%s AND source='bom_acorn') a
-            FULL OUTER JOIN (SELECT date,tmax,tmin FROM temperature_readings WHERE station_id=%s AND source='bom_api') b ON a.date=b.date
-            FULL OUTER JOIN (SELECT date,tmax,tmin FROM temperature_readings WHERE station_id=%s AND source='noaa_ghcn') n ON a.date=n.date OR b.date=n.date
-            WHERE 1=1{dc} ORDER BY 1 LIMIT 5000
-        """, params)
-        return [{"date": str(r[0]), "acorn_tmax": float(r[1]) if r[1] else None, "acorn_tmin": float(r[2]) if r[2] else None,
-                 "api_tmax": float(r[3]) if r[3] else None, "api_tmin": float(r[4]) if r[4] else None,
-                 "noaa_tmax": float(r[5]) if r[5] else None, "noaa_tmin": float(r[6]) if r[6] else None} for r in rows]
+        rows = query(f"SELECT date, tmax, tmin FROM temperature_readings WHERE station_id = %s AND source = %s ORDER BY date", [station_id, source])
+        annual = {}
+        for r in rows:
+            year = r[0][:4]
+            if year not in annual:
+                annual[year] = {"tmax": [], "tmin": []}
+            if r[1] is not None: annual[year]["tmax"].append(r[1])
+            if r[2] is not None: annual[year]["tmin"].append(r[2])
+        years = sorted(annual.keys())
+        means = {}
+        for y in years:
+            d = annual[y]
+            means[y] = {"tmax": sum(d["tmax"])/len(d["tmax"]) if d["tmax"] else None,
+                        "tmin": sum(d["tmin"])/len(d["tmin"]) if d["tmin"] else None}
+        baseline_start, baseline_end = "1961", "1990"
+        base_tmax, base_tmin = [], []
+        for y in years:
+            if baseline_start <= y <= baseline_end:
+                m = means[y]
+                if m["tmax"] is not None: base_tmax.append(m["tmax"])
+                if m["tmin"] is not None: base_tmin.append(m["tmin"])
+        b_tmax = sum(base_tmax)/len(base_tmax) if base_tmax else None
+        b_tmin = sum(base_tmin)/len(base_tmin) if base_tmin else None
+        result = []
+        for y in years:
+            m = means[y]
+            result.append({"year": y, "tmax": m["tmax"], "tmin": m["tmin"],
+                           "anomaly_tmax": round(m["tmax"] - b_tmax, 2) if (m["tmax"] and b_tmax) else None,
+                           "anomaly_tmin": round(m["tmin"] - b_tmin, 2) if (m["tmin"] and b_tmin) else None})
+        return {"station_id": station_id, "baseline": f"{baseline_start}-{baseline_end}",
+                "baseline_tmax": round(b_tmax, 2) if b_tmax else None,
+                "baseline_tmin": round(b_tmin, 2) if b_tmin else None,
+                "years": result}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/api/export/{station_id}")
+def api_export(station_id: str, source: str = None, from_date: str = Query(None, alias="from"), to_date: str = Query(None, alias="to")):
+    try:
+        data = api_data(station_id, source, from_date, to_date, 50000)
+        if isinstance(data, JSONResponse): return data
+        lines = ["date,tmax,tmin,source"]
+        for r in data:
+            lines.append(f"{r['d']},{r['tmax'] or ''},{r['tmin'] or ''},{r['src']}")
+        return PlainTextResponse("\n".join(lines), media_type="text/csv",
+                                 headers={"Content-Disposition": f"attachment; filename={station_id}.csv"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -249,231 +220,297 @@ HOME = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RawRadar</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0f;color:#e4e4e7}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#18181b}
+::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:3px}
+.glass{background:rgba(24,24,27,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.06)}
 </style>
 </head>
 <body>
 <div class="min-h-screen flex flex-col">
-  <header class="bg-zinc-900/80 border-b border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur">
+  <header class="glass border-b border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <a href="/" class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">RR</div>
+      <h1 class="text-lg font-bold">RawRadar</h1>
+    </a>
     <div class="flex items-center gap-3">
-      <a href="/" class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">RR</div>
-        <h1 class="text-lg font-bold">RawRadar</h1>
-      </a>
+      <span id="rec-count" class="text-xs text-zinc-500"></span>
+      <button id="status-btn" onclick="checkHealth()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-zinc-800 border-zinc-700 hover:bg-zinc-700">
+        <span class="w-2 h-2 rounded-full bg-zinc-600" id="status-dot"></span>
+        <span id="status-text">DB</span>
+      </button>
     </div>
-    <button id="status-btn" onclick="checkHealth()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-zinc-800 border-zinc-700 hover:bg-zinc-700">
-      <span class="w-2 h-2 rounded-full bg-zinc-600" id="status-dot"></span>
-      <span id="status-text">Check DB</span>
-      <span class="text-zinc-600 ml-1">↻</span>
-    </button>
   </header>
 
-  <div class="flex-1 p-4 lg:p-6 max-w-5xl mx-auto w-full">
-    <div id="error-banner" class="hidden bg-red-900/50 border border-red-500/30 rounded-2xl p-4 mb-4 text-sm"></div>
+  <div class="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full">
+    <div id="error" class="hidden bg-red-900/50 border border-red-500/30 rounded-2xl p-4 mb-4 text-sm"></div>
 
-    <div class="bg-zinc-900 rounded-2xl p-4 lg:p-6 mb-4 border border-white/5">
-      <div class="flex flex-wrap gap-3 items-end">
-        <div class="flex-1 min-w-[200px]">
-          <label class="text-xs text-zinc-500 mb-1 block">Station</label>
-          <select id="station-select" class="w-full bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10"></select>
-        </div>
-        <div>
-          <label class="text-xs text-zinc-500 mb-1 block">Source</label>
-          <select id="source-select" class="bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10">
-            <option value="bom_acorn">BOM ACORN-SAT</option>
-            <option value="bom_api">BOM API</option>
-            <option value="noaa_ghcn">NOAA GHCN</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-zinc-500 mb-1 block">From</label>
-          <input type="number" id="from-year" class="bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10 w-24" value="2010">
-        </div>
-        <div>
-          <label class="text-xs text-zinc-500 mb-1 block">To</label>
-          <input type="number" id="to-year" class="bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10 w-24" value="2025">
-        </div>
-        <button id="load-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">Load</button>
+    <div class="flex flex-wrap gap-3 items-end mb-4">
+      <div class="flex-1 min-w-[200px]">
+        <label class="text-xs text-zinc-500 mb-1 block">Station</label>
+        <select id="stn" class="w-full bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10"></select>
       </div>
-      <div id="range-info" class="mt-2 text-xs text-zinc-600 hidden"></div>
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">Source</label>
+        <select id="src" class="bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10">
+          <option value="bom_acorn">BOM ACORN-SAT</option>
+          <option value="bom_api">BOM API</option>
+          <option value="noaa_ghcn">NOAA GHCN</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">From</label>
+        <input type="number" id="fyr" class="bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10 w-24" value="1910">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500 mb-1 block">To</label>
+        <input type="number" id="tyr" class="bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10 w-24" value="2024">
+      </div>
+      <button id="load-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-medium">Load</button>
+      <a id="dl-btn" class="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 px-4 py-2.5 rounded-xl text-sm font-medium no-underline hidden cursor-pointer">CSV</a>
     </div>
 
-    <div class="bg-zinc-900 rounded-2xl border border-white/5 overflow-hidden">
-      <div class="flex items-center justify-between px-4 lg:px-6 py-4 border-b border-white/5">
-        <div>
-          <h2 class="text-base font-semibold" id="table-title">Temperature Readings</h2>
-          <p class="text-xs text-zinc-500" id="table-subtitle"></p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+      <div class="glass rounded-2xl p-5 col-span-2">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-semibold" id="chart-title">Temperature Anomaly</h2>
+          <div class="flex gap-1.5">
+            <button id="m-tmax" class="px-3 py-1 rounded-lg text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30">Tmax</button>
+            <button id="m-tmin" class="px-3 py-1 rounded-lg text-xs text-zinc-400 hover:text-zinc-300">Tmin</button>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="prev-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5" disabled>←</button>
-          <span id="page-info" class="text-xs text-zinc-500 w-12 text-center">0</span>
-          <button id="next-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5" disabled>→</button>
+        <div class="relative" style="height:300px">
+          <canvas id="chart"></canvas>
+          <div id="loading" class="absolute inset-0 flex items-center justify-center bg-zinc-900/60 rounded-2xl hidden">
+            <div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
         </div>
       </div>
-      <div id="loading" class="hidden text-center py-12 text-zinc-500 text-sm">Loading...</div>
-      <div id="table-container" class="overflow-x-auto">
-        <div class="text-center py-16 text-zinc-600 text-sm">Select a station and click Load</div>
+      <div class="glass rounded-2xl p-5">
+        <h3 class="text-sm font-semibold mb-3">Climate Stripes</h3>
+        <div id="stripes" class="flex h-[260px] rounded-xl overflow-hidden"></div>
+        <div class="flex justify-between text-xs text-zinc-500 mt-1">
+          <span id="s-start"></span>
+          <span id="s-end"></span>
+        </div>
+        <div class="flex items-center gap-3 mt-2 text-xs text-zinc-500">
+          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-blue-700"></span> Cooler</span>
+          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-red-700"></span> Warmer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div>
+          <h3 class="text-sm font-semibold" id="tbl-title">Daily Readings</h3>
+          <p class="text-xs text-zinc-500" id="tbl-sub"></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="pp" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5" disabled>←</button>
+          <span id="pi" class="text-xs text-zinc-500 w-12 text-center">0</span>
+          <button id="np" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5" disabled>→</button>
+        </div>
+      </div>
+      <div id="tbl" class="overflow-x-auto">
+        <div class="text-center py-12 text-zinc-600 text-sm">Select station, click Load</div>
       </div>
     </div>
   </div>
 
-  <footer class="bg-zinc-900/50 border-t border-white/5 px-6 py-3 text-xs text-zinc-600 flex items-center justify-between">
-    <span>RawRadar</span>
-    <span id="record-count"></span>
+  <footer class="glass border-t border-white/5 px-6 py-3 text-xs text-zinc-600 flex items-center justify-between">
+    <span>RawRadar — Weather Data Transparency</span>
   </footer>
 </div>
 
 <script>
-const PAGE_SIZE = 100;
-let currentData = [];
-let currentPage = 0;
+const PAGE = 100;
+let raw = [], pg = 0, ch = null, ac = null;
+
+function $id(id) { return document.getElementById(id); }
 
 async function checkHealth() {
-  const btn = document.getElementById('status-btn');
+  const btn = $id('status-btn');
   btn.classList.add('opacity-60', 'pointer-events-none');
-  document.getElementById('status-text').textContent = 'Checking...';
-  document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-zinc-500';
+  $id('status-text').textContent = '...';
   try {
-    const r = await fetch('/api/health');
-    const h = await r.json();
-    const dot = document.getElementById('status-dot');
-    const text = document.getElementById('status-text');
+    const h = await (await fetch('/api/health')).json();
+    const d = $id('status-dot'), t = $id('status-text');
     if (h.database?.connected) {
-      dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-      text.textContent = 'Connected (' + (h.method || '?') + ')';
-      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-emerald-900/30 border-emerald-700/30 text-emerald-400 hover:bg-emerald-900/50';
+      d.className = 'w-2 h-2 rounded-full bg-emerald-500';
+      t.textContent = 'OK';
+      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border bg-emerald-900/30 border-emerald-700/30 text-emerald-400';
+      const c = await (await fetch('/api/counts')).json();
+      $id('rec-count').textContent = Object.values(c).reduce((a,b)=>a+b,0).toLocaleString() + ' rec';
     } else {
-      dot.className = 'w-2 h-2 rounded-full bg-red-500';
-      text.textContent = 'Error';
-      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-red-900/30 border-red-700/30 text-red-400 hover:bg-red-900/50';
-      document.getElementById('error-banner').textContent = 'DB: ' + (h.database?.detail || 'unknown');
-      document.getElementById('error-banner').classList.remove('hidden');
+      d.className = 'w-2 h-2 rounded-full bg-red-500';
+      t.textContent = 'ERR: ' + (h.database?.detail || '');
+      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border bg-red-900/30 border-red-700/30 text-red-400';
     }
-  } catch (e) {
-    document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
-    document.getElementById('status-text').textContent = 'Error';
+  } catch(e) {
+    $id('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
+    $id('status-text').textContent = 'ERR';
   }
   btn.classList.remove('opacity-60', 'pointer-events-none');
 }
 
 async function loadData() {
-  const station = document.getElementById('station-select').value;
-  const source = document.getElementById('source-select').value;
-  const from = document.getElementById('from-year').value + '-01-01';
-  const to = document.getElementById('to-year').value + '-12-31';
-  if (!station) return;
-  document.getElementById('error-banner').classList.add('hidden');
-  document.getElementById('loading').classList.remove('hidden');
-  document.getElementById('table-container').innerHTML = '';
-  document.getElementById('load-btn').disabled = true;
+  const sid = $id('stn').value, src = $id('src').value;
+  if (!sid) return;
+  $id('loading').classList.remove('hidden');
+  $id('error').classList.add('hidden');
+  $id('dl-btn').classList.add('hidden');
+  const f = $id('fyr').value + '-01-01', t = $id('tyr').value + '-12-31';
   try {
-    const r = await fetch(`/api/data/${station}?source=${source}&from=${from}&to=${to}&limit=50000`);
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || `HTTP ${r.status}`); }
-    const data = await r.json();
-    if (data.error) throw new Error(data.error);
-    currentData = Array.isArray(data) ? data : [];
-    currentPage = 0;
-    const name = document.getElementById('station-select').selectedOptions[0]?.text || station;
-    document.getElementById('table-title').textContent = name;
-    document.getElementById('table-subtitle').textContent = currentData.length
-      ? `${currentData.length.toLocaleString()} readings \u2014 ${currentData[0].date} to ${currentData[currentData.length-1].date}`
-      : 'No data for this period. Try different years or source.';
-    document.getElementById('record-count').textContent = currentData.length ? `${currentData.length.toLocaleString()} records` : '';
+    const r = await fetch(`/api/data/${sid}?source=${src}&from=${f}&to=${t}&limit=50000`);
+    if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || `HTTP ${r.status}`);
+    raw = await r.json();
+    if (raw.error) throw new Error(raw.error);
+    raw = Array.isArray(raw) ? raw : [];
+    pg = 0;
+    const name = $id('stn').selectedOptions[0]?.text || sid;
+    $id('chart-title').textContent = name + ' — Temperature Anomaly';
+    $id('tbl-title').textContent = name;
+    $id('tbl-sub').textContent = raw.length ? `${raw.length.toLocaleString()} readings` : 'No data';
+    $id('dl-btn').href = `/api/export/${sid}?source=${src}&from=${f}&to=${t}`;
+    $id('dl-btn').classList.remove('hidden');
+    renderChart();
+    renderStripes();
     renderTable();
-  } catch (e) {
-    document.getElementById('error-banner').textContent = e.message;
-    document.getElementById('error-banner').classList.remove('hidden');
-    document.getElementById('table-title').textContent = 'Error';
+  } catch(e) {
+    $id('error').textContent = e.message;
+    $id('error').classList.remove('hidden');
   }
-  document.getElementById('loading').classList.add('hidden');
-  document.getElementById('load-btn').disabled = false;
+  $id('loading').classList.add('hidden');
+}
+
+function renderChart() {
+  const ctx = $id('chart').getContext('2d');
+  if (ch) ch.destroy();
+  if (!raw.length) return;
+  const mode = $id('m-tmax').classList.contains('bg-orange-500/20') ? 'tmax' : 'tmin';
+  const years = {};
+  for (const d of raw) {
+    const y = d.d.slice(0,4);
+    if (!years[y]) years[y] = [];
+    if (d[mode] != null) years[y].push(d[mode]);
+  }
+  const labels = Object.keys(years).sort();
+  const annual = labels.map(y => years[y].reduce((a,b)=>a+b,0)/years[y].length);
+  const base = labels.filter(y => y >= '1961' && y <= '1990');
+  const bv = base.reduce((s,y) => s + annual[labels.indexOf(y)], 0) / base.length;
+  const anom = annual.map(v => v - bv);
+  const colors = anom.map(v => v >= 0 ? `rgba(239,68,68,${Math.min(1, v/3)})` : `rgba(59,130,246,${Math.min(1, Math.abs(v)/3)})`);
+  ch = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Anomaly (°C)', data: anom, backgroundColor: colors, borderRadius: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { backgroundColor: 'rgba(24,24,27,0.95)', titleColor: '#e4e4e7', bodyColor: '#a1a1aa', padding: 10, cornerRadius: 8, callbacks: { label: ctx => `${ctx.parsed.y.toFixed(2)}°C` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#71717a', font: {size:10}, maxTicksLimit: 20 } },
+        y: { grid: { color: '#ffffff08' }, ticks: { color: '#71717a', font: {size:10}, callback: v => v + '°' } }
+      }
+    }
+  });
+}
+
+function renderStripes() {
+  const el = $id('stripes');
+  if (!raw.length) { el.innerHTML = '<div class="flex-1 bg-zinc-800 rounded-xl flex items-center justify-center text-xs text-zinc-500">No data</div>'; return; }
+  const byYear = {};
+  for (const d of raw) {
+    const y = d.d.slice(0,4);
+    if (d.tmax == null) continue;
+    if (!byYear[y]) byYear[y] = [];
+    byYear[y].push(d.tmax);
+  }
+  const ys = Object.keys(byYear).filter(y => byYear[y].length > 20).sort();
+  if (ys.length < 2) { el.innerHTML = '<div class="flex-1 bg-zinc-800 rounded-xl flex items-center justify-center text-xs text-zinc-500">Insufficient data</div>'; return; }
+  const means = ys.map(y => byYear[y].reduce((a,b)=>a+b,0) / byYear[y].length);
+  const bl = means.reduce((a,b)=>a+b,0) / means.length;
+  const mx = Math.max(...means.map(m => Math.abs(m - bl)));
+  $id('s-start').textContent = ys[0];
+  $id('s-end').textContent = ys[ys.length-1];
+  el.innerHTML = ys.map(y => {
+    const m = byYear[y].reduce((a,b)=>a+b,0) / byYear[y].length;
+    const d = (m - bl) / mx;
+    const c = Math.max(-1, Math.min(1, d));
+    const r = c > 0 ? Math.round(180 * c + 70) : 50;
+    const b = c < 0 ? Math.round(180 * Math.abs(c) + 70) : 50;
+    const g = Math.round(50 + 50 * (1 - Math.abs(c)));
+    return `<div class="flex-1 hover:opacity-70 transition-opacity" style="background:rgb(${r},${g},${b})" title="${y}: ${m.toFixed(1)}°C"></div>`;
+  }).join('');
 }
 
 function renderTable() {
-  if (!currentData.length) {
-    document.getElementById('table-container').innerHTML = '<div class="text-center py-12 text-zinc-500 text-sm">No data for this period</div>';
-    document.getElementById('prev-btn').disabled = true;
-    document.getElementById('next-btn').disabled = true;
-    document.getElementById('page-info').textContent = '0';
+  if (!raw.length) {
+    $id('tbl').innerHTML = '<div class="text-center py-12 text-zinc-500 text-sm">No data</div>';
+    $id('pp').disabled = true; $id('np').disabled = true; $id('pi').textContent = '0';
     return;
   }
-  const totalPages = Math.ceil(currentData.length / PAGE_SIZE);
-  const start = currentPage * PAGE_SIZE;
-  const end = Math.min(start + PAGE_SIZE, currentData.length);
-  const page = currentData.slice(start, end);
-  document.getElementById('prev-btn').disabled = currentPage <= 0;
-  document.getElementById('next-btn').disabled = currentPage >= totalPages - 1;
-  document.getElementById('page-info').textContent = `${currentPage + 1}/${totalPages}`;
-  document.getElementById('table-container').innerHTML = `
+  const tp = Math.ceil(raw.length / PAGE);
+  const s = pg * PAGE, e = Math.min(s + PAGE, raw.length);
+  const p = raw.slice(s, e);
+  $id('pp').disabled = pg <= 0;
+  $id('np').disabled = pg >= tp - 1;
+  $id('pi').textContent = `${pg+1}/${tp}`;
+  $id('tbl').innerHTML = `
     <table class="w-full text-xs">
       <thead><tr class="text-zinc-500 border-b border-white/5">
         <th class="text-left py-2.5 px-4 font-medium">Date</th>
-        <th class="text-right py-2.5 px-4 font-medium">Max Temp</th>
-        <th class="text-right py-2.5 px-4 font-medium">Min Temp</th>
-        <th class="text-right py-2.5 px-4 font-medium">Range</th>
+        <th class="text-right py-2.5 px-4 font-medium">Max</th>
+        <th class="text-right py-2.5 px-4 font-medium">Min</th>
       </tr></thead>
-      <tbody>${page.map(d => {
-        const range = d.tmax != null && d.tmin != null ? (d.tmax - d.tmin).toFixed(1) : '-';
+      <tbody>${p.map(d => {
+        const tc = d.tmax != null ? 'text-orange-400' : 'text-zinc-700';
+        const nc = d.tmin != null ? 'text-blue-400' : 'text-zinc-700';
         return `<tr class="border-b border-white/5 hover:bg-white/[0.02]">
-          <td class="py-2 px-4 text-zinc-300 font-medium">${d.date}</td>
-          <td class="py-2 px-4 text-right ${d.tmax != null ? 'text-orange-400' : 'text-zinc-700'}">${d.tmax != null ? d.tmax.toFixed(1)+'\u00b0' : '-'}</td>
-          <td class="py-2 px-4 text-right ${d.tmin != null ? 'text-blue-400' : 'text-zinc-700'}">${d.tmin != null ? d.tmin.toFixed(1)+'\u00b0' : '-'}</td>
-          <td class="py-2 px-4 text-right text-zinc-500">${range}</td>
+          <td class="py-2 px-4 text-zinc-300">${d.d}</td>
+          <td class="py-2 px-4 text-right ${tc}">${d.tmax != null ? d.tmax.toFixed(1)+'°' : '-'}</td>
+          <td class="py-2 px-4 text-right ${nc}">${d.tmin != null ? d.tmin.toFixed(1)+'°' : '-'}</td>
         </tr>`;
       }).join('')}</tbody>
     </table>
-    <div class="text-center text-xs text-zinc-600 py-3">${start+1}\u2013${Math.min(end, currentData.length)} of ${currentData.length.toLocaleString()}</div>`;
+    <div class="text-center text-xs text-zinc-600 py-3">${s+1}–${e} of ${raw.length.toLocaleString()}</div>`;
 }
+
+$id('load-btn').addEventListener('click', loadData);
+$id('pp').addEventListener('click', () => { if (pg > 0) { pg--; renderTable(); }});
+$id('np').addEventListener('click', () => { if ((pg + 1) * PAGE < raw.length) { pg++; renderTable(); }});
+$id('m-tmax').addEventListener('click', function() {
+  document.querySelectorAll('[id^="m-"]').forEach(b => { b.className = 'px-3 py-1 rounded-lg text-xs text-zinc-400 hover:text-zinc-300'; });
+  this.className = 'px-3 py-1 rounded-lg text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30';
+  renderChart();
+});
+$id('m-tmin').addEventListener('click', function() {
+  document.querySelectorAll('[id^="m-"]').forEach(b => { b.className = 'px-3 py-1 rounded-lg text-xs text-zinc-400 hover:text-zinc-300'; });
+  this.className = 'px-3 py-1 rounded-lg text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30';
+  renderChart();
+});
 
 async function init() {
-  const btn = document.getElementById('status-btn');
-  btn.classList.add('opacity-60', 'pointer-events-none');
-  document.getElementById('status-text').textContent = 'Connecting...';
+  await checkHealth();
   try {
-    const r = await fetch('/api/health');
-    const h = await r.json();
-    if (h.database?.connected) {
-      document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-emerald-500';
-      document.getElementById('status-text').textContent = 'Connected (' + (h.method || '?') + ')';
-      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-emerald-900/30 border-emerald-700/30 text-emerald-400 hover:bg-emerald-900/50';
-    } else {
-      document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
-      document.getElementById('status-text').textContent = 'Error: ' + (h.database?.detail || '');
-      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-red-900/30 border-red-700/30 text-red-400 hover:bg-red-900/50';
-      document.getElementById('error-banner').textContent = 'Database: ' + (h.database?.detail || 'unknown');
-      document.getElementById('error-banner').classList.remove('hidden');
-      document.getElementById('load-btn').disabled = true;
-    }
-  } catch (e) {
-    document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
-    document.getElementById('status-text').textContent = 'Server Error';
-  }
-  btn.classList.remove('opacity-60', 'pointer-events-none');
-  try {
-    const r = await fetch('/api/stations');
-    const stations = await r.json();
-    if (stations.error) throw new Error(stations.error);
-    const select = document.getElementById('station-select');
-    select.innerHTML = stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-
-    const goodIds = ["009021","004032","014015","031011","040004","037010","011052","015590","072150","096003","039083"];
-    const goodStation = stations.find(s => goodIds.includes(s.id));
-    if (goodStation) {
-      select.value = goodStation.id;
-      document.getElementById('table-title').textContent = goodStation.name + ' — click Load to view';
-    }
-    document.getElementById('load-btn').disabled = false;
-  } catch (e) {
-    document.getElementById('error-banner').textContent = 'Stations: ' + e.message;
-    document.getElementById('error-banner').classList.remove('hidden');
+    const sts = await (await fetch('/api/stations')).json();
+    if (sts.error) throw new Error(sts.error);
+    const sel = $id('stn');
+    sel.innerHTML = sts.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    const good = ["009021","004032","014015","031011","040004","037010","011052","015590","072150","096003","039083"];
+    const gs = sts.find(s => good.includes(s.id));
+    if (gs) { sel.value = gs.id; loadData(); }
+  } catch(e) {
+    $id('error').textContent = 'Stations: ' + e.message;
+    $id('error').classList.remove('hidden');
   }
 }
 
-document.getElementById('load-btn').addEventListener('click', loadData);
-document.getElementById('prev-btn').addEventListener('click', () => { if (currentPage > 0) { currentPage--; renderTable(); }});
-document.getElementById('next-btn').addEventListener('click', () => { if ((currentPage + 1) * PAGE_SIZE < currentData.length) { currentPage++; renderTable(); }});
 init();
 </script>
 </body>
