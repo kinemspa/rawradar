@@ -516,24 +516,25 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function
   setTimeout(()=>renderAll(),50);
 }));
 async function init(){
-  await checkHealth();
+  checkHealth();
+  $('fyr').value=new Date().getFullYear()-11;
+  $('tyr').value=new Date().getFullYear()-2;
   try{
     const sts=await(await fetch('/api/stations')).json();
     if(sts.error)throw new Error(sts.error);
     const sel=$('stn');sel.innerHTML=sts.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
     const good=["066214","086338","040842","009021","031011","014015","023000","094029","070351"];
-    const gs=sts.find(s=>good.includes(s.id));if(gs)sel.value=gs.id
-    if(gs){
-      const yr=await(await fetch(`/api/years/${gs.id}?source=bom_acorn`)).catch(()=>({}));
+    const gs=sts.find(s=>good.includes(s.id));
+    if(!gs)return;
+    sel.value=gs.id;
+    try{
+      const yr=await(await fetch(`/api/years/${gs.id}?source=bom_acorn`)).json();
       if(yr.min){
         const ny=parseInt(yr.max.slice(0,4));
         $('fyr').value=Math.max(parseInt(yr.min.slice(0,4)),ny-10);
         $('tyr').value=ny;
-      } else {
-        $('fyr').value=new Date().getFullYear()-1;
-        $('tyr').value=new Date().getFullYear();
       }
-    }
+    }catch(e){}
   }catch(e){$('error').textContent='Stations: '+e.message;$('error').classList.remove('hidden')}
 }
 init();
