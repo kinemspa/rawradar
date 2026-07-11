@@ -460,14 +460,9 @@ async function init() {
     const goodStation = stations.find(s => goodIds.includes(s.id));
     if (goodStation) {
       select.value = goodStation.id;
-      const yr = await fetch(`/api/years/${goodStation.id}?source=bom_acorn`).catch(()=>({}));
-      const yrData = await yr.json ? await yr : {};
-      if (yrData.min) {
-        document.getElementById('from-year').value = yrData.min.slice(0,4);
-        document.getElementById('to-year').value = yrData.max.slice(0,4);
-      }
+      document.getElementById('table-title').textContent = goodStation.name + ' — click Load to view';
     }
-    if (stations.length > 0) loadData();
+    document.getElementById('load-btn').disabled = false;
   } catch (e) {
     document.getElementById('error-banner').textContent = 'Stations: ' + e.message;
     document.getElementById('error-banner').classList.remove('hidden');
