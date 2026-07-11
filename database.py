@@ -52,4 +52,4 @@ CREATE TABLE IF NOT EXISTS ingestion_log (
 
 
 def get_connection():
-    return psycopg2.connect(DATABASE_URL, connect_timeout=10)
+    return psycopg2.connect(DATABASE_URL, connect_timeout=10, sslmode="require")

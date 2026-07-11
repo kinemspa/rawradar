@@ -14,7 +14,7 @@ def get_db():
     url = os.getenv("DATABASE_URL")
     if not url:
         raise Exception("DATABASE_URL not set. Add it to Vercel Environment Variables.")
-    return psycopg2.connect(url, connect_timeout=5)
+    return psycopg2.connect(url, connect_timeout=10, sslmode="require")
 
 
 def query(sql, params=None):
@@ -143,7 +143,6 @@ HOME = r"""<!DOCTYPE html>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0f;color:#e4e4e7}
-code{font-family:monospace;font-size:11px}
 </style>
 </head>
 <body>
@@ -153,14 +152,19 @@ code{font-family:monospace;font-size:11px}
       <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">RR</div>
       <h1 class="text-lg font-bold">RawRadar</h1>
     </div>
-    <div class="flex items-center gap-2 text-xs" id="status-bar">
+    <button id="status-btn" onclick="checkHealth()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-zinc-800 border-zinc-700 hover:bg-zinc-700">
       <span class="w-2 h-2 rounded-full bg-zinc-600" id="status-dot"></span>
-      <span class="text-zinc-500" id="status-text">Checking...</span>
-    </div>
+      <span id="status-text">Check DB</span>
+      <span class="text-zinc-600 ml-1">↻</span>
+    </button>
   </header>
 
   <div class="flex-1 p-4 lg:p-6 max-w-5xl mx-auto w-full">
     <div id="error-banner" class="hidden bg-red-900/50 border border-red-500/30 rounded-2xl p-4 mb-4 text-sm"></div>
+    <div id="success-banner" class="hidden bg-emerald-900/30 border border-emerald-500/20 rounded-2xl p-3 mb-4 text-xs text-emerald-400 flex items-center gap-2">
+      <span>✓</span><span id="success-text">Connected</span>
+      <button onclick="document.getElementById('success-banner').classList.add('hidden')" class="ml-auto text-zinc-500 hover:text-zinc-300">✕</button>
+    </div>
 
     <div class="bg-zinc-900 rounded-2xl p-4 lg:p-6 mb-4 border border-white/5">
       <div class="flex flex-wrap gap-3 items-end">
@@ -184,7 +188,7 @@ code{font-family:monospace;font-size:11px}
           <label class="text-xs text-zinc-500 mb-1 block">To</label>
           <input type="number" id="to-year" class="bg-zinc-800 text-zinc-200 px-3 py-2.5 rounded-xl text-sm border border-white/10 w-24" value="2025">
         </div>
-        <button id="load-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-50">Load</button>
+        <button id="load-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">Load</button>
       </div>
       <div id="range-info" class="mt-2 text-xs text-zinc-600 hidden"></div>
     </div>
@@ -195,7 +199,7 @@ code{font-family:monospace;font-size:11px}
           <h2 class="text-base font-semibold" id="table-title">Temperature Readings</h2>
           <p class="text-xs text-zinc-500" id="table-subtitle"></p>
         </div>
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-2">
           <button id="prev-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5" disabled>←</button>
           <span id="page-info" class="text-xs text-zinc-500 w-12 text-center">0</span>
           <button id="next-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5" disabled>→</button>
@@ -220,6 +224,10 @@ let currentData = [];
 let currentPage = 0;
 
 async function checkHealth() {
+  const btn = document.getElementById('status-btn');
+  btn.classList.add('opacity-60', 'pointer-events-none');
+  document.getElementById('status-text').textContent = 'Checking...';
+  document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-zinc-500 animate-pulse';
   try {
     const r = await fetch('/api/health');
     const h = await r.json();
@@ -228,23 +236,42 @@ async function checkHealth() {
     if (h.database?.connected) {
       dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
       text.textContent = 'DB Connected';
+      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-emerald-900/30 border-emerald-700/30 text-emerald-400 hover:bg-emerald-900/50';
       document.getElementById('load-btn').disabled = false;
+      const counts = await (await fetch('/api/counts')).catch(() => ({}));
+      const total = Object.values(counts).reduce((a,b) => a+b, 0);
+      if (total > 0) {
+        document.getElementById('success-banner').classList.remove('hidden');
+        document.getElementById('success-text').textContent = `Connected — ${total.toLocaleString()} records across ${Object.keys(counts).length} sources`;
+      } else {
+        showWarning('DB connected but 0 records found. Data may need to be ingested.');
+      }
     } else {
       dot.className = 'w-2 h-2 rounded-full bg-red-500';
-      text.textContent = 'DB Error: ' + (h.database?.detail || 'unknown');
-      showError('Database connection failed. ' + (h.database?.detail || '') + '. Add DATABASE_URL to Vercel Environment Variables.');
-      document.getElementById('load-btn').disabled = true;
+      text.textContent = 'DB Error';
+      btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-red-900/30 border-red-700/30 text-red-400 hover:bg-red-900/50';
+      showError('Database: ' + (h.database?.detail || 'connection failed'));
     }
   } catch (e) {
     document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
     document.getElementById('status-text').textContent = 'Server Error';
   }
+  btn.classList.remove('opacity-60', 'pointer-events-none');
 }
 
 function showError(msg) {
+  document.getElementById('success-banner').classList.add('hidden');
   const el = document.getElementById('error-banner');
   el.textContent = msg;
   el.classList.remove('hidden');
+}
+
+function showWarning(msg) {
+  document.getElementById('error-banner').classList.add('hidden');
+  const el = document.getElementById('success-banner');
+  el.classList.remove('hidden');
+  document.getElementById('success-text').textContent = msg;
+  el.className = 'bg-amber-900/30 border border-amber-500/20 rounded-2xl p-3 mb-4 text-xs text-amber-400 flex items-center gap-2';
 }
 
 function hideError() {
