@@ -256,8 +256,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0f;color:#e4
 <div class="min-h-screen flex flex-col">
   <header class="bg-zinc-900/80 border-b border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">RR</div>
-      <h1 class="text-lg font-bold">RawRadar</h1>
+      <a href="/" class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">RR</div>
+        <h1 class="text-lg font-bold">RawRadar</h1>
+      </a>
     </div>
     <button id="status-btn" onclick="checkHealth()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-zinc-800 border-zinc-700 hover:bg-zinc-700">
       <span class="w-2 h-2 rounded-full bg-zinc-600" id="status-dot"></span>
@@ -453,6 +455,18 @@ async function init() {
     if (stations.error) throw new Error(stations.error);
     const select = document.getElementById('station-select');
     select.innerHTML = stations.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+    const goodIds = ["009021","004032","014015","031011","040004","037010","011052","015590","072150","096003","039083"];
+    const goodStation = stations.find(s => goodIds.includes(s.id));
+    if (goodStation) {
+      select.value = goodStation.id;
+      const yr = await fetch(`/api/years/${goodStation.id}?source=bom_acorn`).catch(()=>({}));
+      const yrData = await yr.json ? await yr : {};
+      if (yrData.min) {
+        document.getElementById('from-year').value = yrData.min.slice(0,4);
+        document.getElementById('to-year').value = yrData.max.slice(0,4);
+      }
+    }
     if (stations.length > 0) loadData();
   } catch (e) {
     document.getElementById('error-banner').textContent = 'Stations: ' + e.message;
