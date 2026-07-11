@@ -48,7 +48,15 @@ def _query_rest(sql, params=None):
             elif isinstance(p, str) and len(p) == 6 and p.isdigit():
                 q["station_id"] = f"eq.{p}"
     limit = 50000
+    order = "date.asc"
     import re
+    m = re.search(r"ORDER BY (\w+)\s*(ASC|DESC)?", sql)
+    if m:
+        order = m.group(1)
+        if m.group(2) == "DESC":
+            order += ".desc"
+        else:
+            order += ".asc"
     m = re.search(r"LIMIT (\d+)", sql)
     if m: limit = min(int(m.group(1)), 50000)
     if "SELECT 1" in sql: return [(1,)]
@@ -58,7 +66,7 @@ def _query_rest(sql, params=None):
         l = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params={**q, "select": "date", "order": "date.desc", "limit": "1"}, timeout=10).json()
         return [(f[0]["date"][:10] if f else None, l[0]["date"][:10] if l else None)]
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers, params={**q, "select": cols, "order": "date.asc", "limit": str(limit)}, timeout=30)
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers, params={**q, "select": cols, "order": order, "limit": str(limit)}, timeout=30)
     if r.status_code != 200:
         raise Exception(f"Supabase error {r.status_code}")
     rows = []
