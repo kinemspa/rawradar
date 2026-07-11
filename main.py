@@ -36,12 +36,14 @@ def _query_rest(sql, params=None):
     if "tmax AS acorn_tmax" in sql or "FULL OUTER JOIN" in sql:
         return _query_compare_rest(sql, params)
     if params:
+        date_idx = 0
         for i, p in enumerate(params):
             if p in ("bom_acorn", "bom_api", "noaa_ghcn"):
                 q["source"] = f"eq.{p}"
             elif isinstance(p, str) and len(p) == 10 and p[4] == "-":
-                if "date >= %s" in sql:
+                if "date >= %s" in sql and date_idx == 0:
                     q["date"] = f"gte.{p}"
+                    date_idx += 1
                 elif "date <= %s" in sql:
                     q["date"] = f"lte.{p}"
                 else:
