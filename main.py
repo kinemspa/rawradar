@@ -214,11 +214,11 @@ select:focus,input:focus{outline:none;border-color:rgba(59,130,246,0.5);box-shad
         </div>
         <div>
           <label class="text-[10px] text-zinc-600 mb-1.5 block uppercase tracking-wider font-medium">From</label>
-          <input type="number" id="fyr" class="bg-zinc-900/50 text-zinc-200 px-4 py-3 rounded-2xl text-sm border border-white/5 w-28" value="1910" style="background:rgba(24,24,27,0.4)">
+          <input type="number" id="fyr" class="bg-zinc-900/50 text-zinc-200 px-4 py-3 rounded-2xl text-sm border border-white/5 w-28" style="background:rgba(24,24,27,0.4)">
         </div>
         <div>
           <label class="text-[10px] text-zinc-600 mb-1.5 block uppercase tracking-wider font-medium">To</label>
-          <input type="number" id="tyr" class="bg-zinc-900/50 text-zinc-200 px-4 py-3 rounded-2xl text-sm border border-white/5 w-28" value="2024" style="background:rgba(24,24,27,0.4)">
+          <input type="number" id="tyr" class="bg-zinc-900/50 text-zinc-200 px-4 py-3 rounded-2xl text-sm border border-white/5 w-28" style="background:rgba(24,24,27,0.4)">
         </div>
         <button id="load-btn" class="px-6 py-3 rounded-2xl text-sm font-semibold text-white transition-all border-0 cursor-pointer" style="background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 0 30px rgba(59,130,246,0.2)">Load</button>
         <a id="dl-btn" class="px-5 py-3 rounded-2xl text-sm font-medium text-zinc-300 no-underline hidden cursor-pointer transition-all border border-white/5 hover:border-white/10" style="background:rgba(24,24,27,0.4)">CSV</a>
@@ -523,6 +523,17 @@ async function init(){
     const sel=$('stn');sel.innerHTML=sts.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
     const good=["066214","086338","040842","009021","031011","014015","023000","094029","070351"];
     const gs=sts.find(s=>good.includes(s.id));if(gs)sel.value=gs.id
+    if(gs){
+      const yr=await(await fetch(`/api/years/${gs.id}?source=bom_acorn`)).catch(()=>({}));
+      if(yr.min){
+        const ny=parseInt(yr.max.slice(0,4));
+        $('fyr').value=Math.max(parseInt(yr.min.slice(0,4)),ny-10);
+        $('tyr').value=ny;
+      } else {
+        $('fyr').value=new Date().getFullYear()-1;
+        $('tyr').value=new Date().getFullYear();
+      }
+    }
   }catch(e){$('error').textContent='Stations: '+e.message;$('error').classList.remove('hidden')}
 }
 init();
