@@ -157,13 +157,13 @@ HOME = r"""<!DOCTYPE html>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#e4e4e7;overflow-x:hidden;font-size:18px;line-height:1.6}
-.text-xs{font-size:15px!important}
-.text-sm{font-size:16px!important}
-.text-base{font-size:17px!important}
-.text-lg{font-size:20px!important}
-.text-xl{font-size:24px!important}
-.tab{transition:all 0.3s ease;font-size:16px;padding:12px 24px!important}.tab:hover{background:rgba(255,255,255,0.04)}
+body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#e4e4e7;overflow-x:hidden;font-size:24px;line-height:1.6}
+.text-xs{font-size:20px!important}
+.text-sm{font-size:21px!important}
+.text-base{font-size:23px!important}
+.text-lg{font-size:26px!important}
+.text-xl{font-size:30px!important}
+.tab{font-size:20px!important;padding:16px 32px!important}
 .tab-active{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.1));border-color:rgba(59,130,246,0.3);color:#93c5fd}
 .pin{animation:pulse 2s ease-in-out infinite;cursor:pointer;transition:r 0.2s}.pin:hover{r:8;filter:brightness(1.3)}
 input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:transparent;outline:none;position:absolute;width:100%;top:8px;pointer-events:none}
@@ -178,7 +178,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 <div class="flex items-center gap-4"><span class="text-xs text-zinc-600" id="rec-count"></span><button id="status-btn" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border border-zinc-800" style="background:rgba(24,24,27,0.5)"><span class="w-1.5 h-1.5 rounded-full bg-zinc-600" id="status-dot"></span><span id="status-text" class="text-zinc-400">DB</span></button></div>
 </header>
 
-<div class="flex-1 p-6 lg:p-10 max-w-[95vw] mx-auto w-full">
+<div class="flex-1 p-8 lg:p-12 w-full" style="max-width:98vw;margin:0 auto">
 <div id="error" class="hidden bg-red-900/30 border border-red-500/20 rounded-3xl p-4 mb-6 text-sm text-red-300"></div>
 
 <div id="map-section" class="glass rounded-3xl p-6 lg:p-8 mb-6" style="background:linear-gradient(135deg,rgba(6,6,20,0.9),rgba(10,10,30,0.9))">
@@ -308,7 +308,7 @@ function renderAnomaly(){
   const bv=bs.length?bs.reduce((s,y)=>s+annual[ys.indexOf(y)],0)/bs.length:annual.reduce((a,b)=>a+b,0)/annual.length;
   const anom=annual.map(v=>v-bv),mx=Math.max(...anom.map(Math.abs))||1;
   const colors=anom.map(v=>v>=0?`rgba(239,68,68,${Math.min(1,v/mx*1.5)})`:`rgba(59,130,246,${Math.min(1,Math.abs(v)/mx*1.5)})`);
-  CH.anomaly=new Chart($('chart-anomaly'),{type:'bar',data:{labels:ys,datasets:[{data:anom,backgroundColor:colors,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(6,6,14,0.95)',titleColor:'#e4e4e7',bodyColor:'#a1a1aa',padding:12,cornerRadius:12,displayColors:false,callbacks:{label:ctx=>`${ctx.parsed.y>0?'+':''}${ctx.parsed.y.toFixed(2)}°C`}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:14},maxTicksLimit:20}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:14},callback:v=>v+'°'}}}}});
+  CH.anomaly=new Chart($('chart-anomaly'),{type:'bar',data:{labels:ys,datasets:[{data:anom,backgroundColor:colors,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(6,6,14,0.95)',titleColor:'#e4e4e7',bodyColor:'#a1a1aa',padding:12,cornerRadius:12,displayColors:false,callbacks:{label:ctx=>`${ctx.parsed.y>0?'+':''}${ctx.parsed.y.toFixed(2)}°C`}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:16},maxTicksLimit:20}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:16},callback:v=>v+'°'}}}}});
   const byYear={};
   raw.forEach(d=>{const y=d.d.slice(0,4);if(d.tmax==null)return;byYear[y]=byYear[y]||[];byYear[y].push(d.tmax)});
   const ys2=Object.keys(byYear).filter(y=>byYear[y].length>20).sort();
@@ -354,11 +354,11 @@ function renderMonthly(){
   const means=mnths.map((_,i)=>{const v=Object.values(byMonth[i+1]?.years||{}).flatMap(v=>v.reduce((a,b)=>a+b,0)/v.length);return v.reduce((a,b)=>a+b,0)/v.length});
   const maxes=mnths.map((_,i)=>{const v=Object.entries(byMonth[i+1]?.years||{}).map(([y,v])=>({y,avg:v.reduce((a,b)=>a+b,0)/v.length}));return Math.max(...v.map(a=>a.avg))});
   const mins=mnths.map((_,i)=>{const v=Object.entries(byMonth[i+1]?.years||{}).map(([y,v])=>({y,avg:v.reduce((a,b)=>a+b,0)/v.length}));return Math.min(...v.map(a=>a.avg))});
-  CH.monthly=new Chart($('chart-monthly'),{type:'line',data:{labels:mnths,datasets:[{label:'Avg',data:means,borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#f97316'},{label:'Max',data:maxes,borderColor:'#ef4444',borderDash:[4,3],pointRadius:0,tension:0.4},{label:'Min',data:mins,borderColor:'#3b82f6',borderDash:[4,3],pointRadius:0,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:14},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:14}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:14}}}}}});
+  CH.monthly=new Chart($('chart-monthly'),{type:'line',data:{labels:mnths,datasets:[{label:'Avg',data:means,borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#f97316'},{label:'Max',data:maxes,borderColor:'#ef4444',borderDash:[4,3],pointRadius:0,tension:0.4},{label:'Min',data:mins,borderColor:'#3b82f6',borderDash:[4,3],pointRadius:0,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:16},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:16}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:16}}}}}});
   ['jan','jul'].forEach((m,mi)=>{const month=mi===0?1:7;
     const years=Object.entries(byMonth[month]?.years||{}).map(([y,vals])=>({y,avg:vals.reduce((a,b)=>a+b,0)/vals.length})).sort((a,b)=>a.y-b.y);
     const ll=years.map(y=>y.avg),trend=ll.map((_,i,a)=>a.slice(Math.max(0,i-10),i+1).reduce((s,v)=>s+v,0)/Math.min(11,i+1));
-    CH[`month-${m}`]=new Chart($(`chart-month-${m}`),{type:'line',data:{labels:years.map(y=>y.y),datasets:[{label:'Annual',data:ll,borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,0.06)',fill:true,pointRadius:0.5,tension:0.2},{label:'10yr avg',data:trend,borderColor:'#f97316',borderWidth:2,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:13},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}})});
+    CH[`month-${m}`]=new Chart($(`chart-month-${m}`),{type:'line',data:{labels:years.map(y=>y.y),datasets:[{label:'Annual',data:ll,borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,0.06)',fill:true,pointRadius:0.5,tension:0.2},{label:'10yr avg',data:trend,borderColor:'#f97316',borderWidth:2,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:15},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:15}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}})});
 }
 
 function renderRecords(){
@@ -367,21 +367,21 @@ function renderRecords(){
   const decades={};
   Object.entries(byYear).forEach(([y,vals])=>{const d=Math.floor(parseInt(y)/10)*10;decades[d]=decades[d]||{years:{}};decades[d].years[y]=vals});
   const dk=Object.keys(decades).sort(),dl=dk.map(d=>`${d}s`);
-  CH.recH=new Chart($('chart-rec-high'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.max(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(239,68,68,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
-  CH.recL=new Chart($('chart-rec-low'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(59,130,246,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
-  CH.recR=new Chart($('chart-rec-range'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map((dk,i)=>Math.max(...Object.values(decades[dk].years).flat())-Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(168,85,247,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
+  CH.recH=new Chart($('chart-rec-high'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.max(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(239,68,68,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:15}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}});
+  CH.recL=new Chart($('chart-rec-low'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(59,130,246,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:15}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}});
+  CH.recR=new Chart($('chart-rec-range'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map((dk,i)=>Math.max(...Object.values(decades[dk].years).flat())-Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(168,85,247,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:15}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}});
   const hotDays={};
   Object.entries(byYear).forEach(([y,vals])=>{hotDays[y]=vals.filter(v=>v>35).length});
   const hd=Object.entries(hotDays).sort((a,b)=>a[0]-b[0]);
-  CH.hotD=new Chart($('chart-rec-hotdays'),{type:'line',data:{labels:hd.map(h=>h[0]),datasets:[{data:hd.map(h=>h[1]),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.06)',fill:true,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13},maxTicksLimit:15}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
+  CH.hotD=new Chart($('chart-rec-hotdays'),{type:'line',data:{labels:hd.map(h=>h[0]),datasets:[{data:hd.map(h=>h[1]),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.06)',fill:true,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:15},maxTicksLimit:15}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}});
 }
 
 function renderScatter(){
   const pts=raw.filter(d=>d.tmax!=null&&d.tmin!=null).map(d=>({x:d.tmin,y:d.tmax}));
-  CH.scatter=new Chart($('chart-scatter'),{type:'scatter',data:{datasets:[{data:pts,backgroundColor:'rgba(59,130,246,0.12)',pointRadius:2,borderColor:'rgba(59,130,246,0.3)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Min Temp (\u00b0C)',color:'#71717a',font:{size:14}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}},y:{title:{display:true,text:'Max Temp (\u00b0C)',color:'#71717a',font:{size:14}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
+  CH.scatter=new Chart($('chart-scatter'),{type:'scatter',data:{datasets:[{data:pts,backgroundColor:'rgba(59,130,246,0.12)',pointRadius:2,borderColor:'rgba(59,130,246,0.3)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Min Temp (\u00b0C)',color:'#71717a',font:{size:16}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}},y:{title:{display:true,text:'Max Temp (\u00b0C)',color:'#71717a',font:{size:16}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}});
   const bins={};raw.forEach(d=>{if(d.tmax==null)return;const b=Math.floor(d.tmax/2)*2;bins[b]=bins[b]||[];bins[b].push(d.tmax)});
   const bl=Object.keys(bins).sort((a,b)=>a-b);
-  CH.dist=new Chart($('chart-dist'),{type:'bar',data:{labels:bl.map(b=>b+'\u00b0'),datasets:[{data:bl.map(b=>bins[b].length),backgroundColor:'rgba(139,92,246,0.4)',borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
+  CH.dist=new Chart($('chart-dist'),{type:'bar',data:{labels:bl.map(b=>b+'\u00b0'),datasets:[{data:bl.map(b=>bins[b].length),backgroundColor:'rgba(139,92,246,0.4)',borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:15}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}});
 }
 
 async function renderCompare(){
@@ -422,14 +422,14 @@ async function renderCompareChart(){
     }catch(e){}
   }
   if(CH.compare)CH.compare.destroy();
-  CH.compare=new Chart($('chart-compare'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:14},usePointStyle:true}}},scales:{x:{type:'category',grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}},y:{title:{display:true,text:'Anomaly (\u00b0C)',color:'#71717a',font:{size:14}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
+  CH.compare=new Chart($('chart-compare'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:16},usePointStyle:true}}},scales:{x:{type:'category',grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}},y:{title:{display:true,text:'Anomaly (\u00b0C)',color:'#71717a',font:{size:16}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:15}}}}}});
 }
 
 function renderTable(){
   if(!raw.length){$('tbl').innerHTML='<div class="text-center py-16 text-zinc-700 text-sm">No data</div>';$('pp').disabled=true;$('np').disabled=true;$('pi').textContent='0';return}
   const tp=Math.ceil(raw.length/PAGE),s=pg*PAGE,e=Math.min(s+PAGE,raw.length),p=raw.slice(s,e);
   $('pp').disabled=pg<=0;$('np').disabled=pg>=tp-1;$('pi').textContent=`${pg+1}/${tp}`;
-  $('tbl').innerHTML=`<table class="w-full text-xs"><thead><tr class="text-zinc-600 border-b border-white/5"><th class="text-left py-3 px-6 font-medium">Date</th><th class="text-right py-3 px-6 font-medium">Max</th><th class="text-right py-3 px-6 font-medium">Min</th></tr></thead><tbody>${p.map(d=>`<tr class="border-b border-white/5 hover:bg-white/[0.01]"><td class="py-2.5 px-6 text-zinc-300 font-mono text-[15px]">${d.d}</td><td class="py-2.5 px-6 text-right font-mono text-[15px] ${d.tmax!=null?'text-orange-400':'text-zinc-700'}">${d.tmax!=null?d.tmax.toFixed(1)+'\u00b0':'-'}</td><td class="py-2.5 px-6 text-right font-mono text-[15px] ${d.tmin!=null?'text-blue-400':'text-zinc-700'}">${d.tmin!=null?d.tmin.toFixed(1)+'\u00b0':'-'}</td></tr>`).join('')}</tbody></table><div class="text-center text-xs text-zinc-700 py-4 font-mono">${s+1}\u2013${e} of ${raw.length.toLocaleString()}</div>`;
+  $('tbl').innerHTML=`<table class="w-full text-xs"><thead><tr class="text-zinc-600 border-b border-white/5"><th class="text-left py-3 px-6 font-medium">Date</th><th class="text-right py-3 px-6 font-medium">Max</th><th class="text-right py-3 px-6 font-medium">Min</th></tr></thead><tbody>${p.map(d=>`<tr class="border-b border-white/5 hover:bg-white/[0.01]"><td class="py-2.5 px-6 text-zinc-300 font-mono text-[17px]">${d.d}</td><td class="py-2.5 px-6 text-right font-mono text-[17px] ${d.tmax!=null?'text-orange-400':'text-zinc-700'}">${d.tmax!=null?d.tmax.toFixed(1)+'\u00b0':'-'}</td><td class="py-2.5 px-6 text-right font-mono text-[17px] ${d.tmin!=null?'text-blue-400':'text-zinc-700'}">${d.tmin!=null?d.tmin.toFixed(1)+'\u00b0':'-'}</td></tr>`).join('')}</tbody></table><div class="text-center text-xs text-zinc-700 py-4 font-mono">${s+1}\u2013${e} of ${raw.length.toLocaleString()}</div>`;
 }
 
 $('load-btn').addEventListener('click',()=>{const sid=$('stn').value;if(sid)selectStation(sid)});
