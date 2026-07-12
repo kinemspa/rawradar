@@ -165,8 +165,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#e4e4e7;o
 .tab{transition:all 0.3s ease}.tab:hover{background:rgba(255,255,255,0.04)}
 .tab-active{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.1));border-color:rgba(59,130,246,0.3);color:#93c5fd}
 .pin{animation:pulse 2s ease-in-out infinite;cursor:pointer;transition:r 0.2s}.pin:hover{r:8;filter:brightness(1.3)}
-input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;outline:none;width:100%}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,0.2);cursor:pointer;box-shadow:0 0 10px rgba(59,130,246,0.3)}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:transparent;outline:none;position:absolute;width:100%;top:8px;pointer-events:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,0.3);cursor:pointer;box-shadow:0 0 12px rgba(59,130,246,0.4);pointer-events:all;position:relative;z-index:30}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#3b82f6;border:2px solid rgba(255,255,255,0.3);cursor:pointer;pointer-events:all}
 </style>
 </head>
 <body>
@@ -197,8 +198,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div id="yr-track" class="absolute top-2 h-1 rounded-full" style="left:0%;right:0%;background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>
 <div id="yr-s-label" class="absolute -top-1 text-xs font-bold text-blue-400 bg-zinc-900 px-1.5 rounded z-10 -translate-x-1/2 pointer-events-none" style="left:0%">2014</div>
 <div id="yr-e-label" class="absolute -top-1 text-xs font-bold text-blue-400 bg-zinc-900 px-1.5 rounded z-10 -translate-x-1/2 pointer-events-none" style="left:100%">2024</div>
-<input type="range" id="yr-s" class="absolute inset-0 w-full opacity-0 cursor-pointer z-20" min="1910" max="2024" value="2014">
-<input type="range" id="yr-e" class="absolute inset-0 w-full opacity-0 cursor-pointer z-20" min="1910" max="2024" value="2024">
+<input type="range" id="yr-s" class="absolute w-full cursor-pointer z-20" min="1910" max="2024" value="2014" style="top:0;left:0;height:24px;-webkit-appearance:none;background:transparent">
+<input type="range" id="yr-e" class="absolute w-full cursor-pointer z-20" min="1910" max="2024" value="2024" style="top:0;left:0;height:24px;-webkit-appearance:none;background:transparent">
 </div>
 </div></div>
 <button id="load-btn" class="px-6 py-3 rounded-2xl text-sm font-semibold text-white border-0 cursor-pointer" style="background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 0 30px rgba(59,130,246,0.2)">Load</button>
@@ -225,7 +226,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 
 <div class="view hidden" id="v-calendar"><div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-<div class="lg:col-span-3 glass rounded-3xl p-6 lg:p-8"><h2 class="text-base font-semibold text-zinc-100 mb-1">Calendar Heatmap</h2><p class="text-xs text-zinc-600 mb-4">Monthly average max temperatures — last 3 years</p><div style="height:300px"><canvas id="chart-cal"></canvas></div><div class="flex justify-center gap-3 mt-4 text-xs text-zinc-500"><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#1e3a5f"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#2b6cb0"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#63b3ed"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#fbd38d"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#ed8936"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#c53030"></span><span class="ml-1">Hot</span></span></div></div>
+<div class="lg:col-span-3 glass rounded-3xl p-6 lg:p-8"><div class="flex items-center justify-between mb-1"><h2 class="text-base font-semibold text-zinc-100">Calendar Heatmap</h2><div class="flex items-center gap-2"><button id="cal-p" class="px-2 py-1 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5">&larr;</button><span id="cal-i" class="text-xs text-zinc-600 w-14 text-center">1/1</span><button id="cal-n" class="px-2 py-1 rounded-lg bg-zinc-800/50 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 text-xs border border-white/5">&rarr;</button></div></div><p class="text-xs text-zinc-600 mb-4">Monthly average max temperatures — <span id="cal-range"></span></p><div style="height:300px"><canvas id="chart-cal"></canvas></div><div class="flex justify-center gap-3 mt-4 text-xs text-zinc-500"><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#1e3a5f"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#2b6cb0"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#63b3ed"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#fbd38d"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#ed8936"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#c53030"></span><span class="ml-1">Hot</span></span></div></div>
 <div class="lg:col-span-2 glass rounded-3xl p-6 lg:p-8"><h2 class="text-base font-semibold text-zinc-100 mb-4">Temperature Spiral</h2><div style="height:350px"><canvas id="chart-spiral"></canvas></div></div>
 </div></div>
 
@@ -256,7 +257,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <script>
-const PAGE=100,W=window;let raw=[],pg=0,stns=[],CH={};const $=id=>document.getElementById(id);
+const PAGE=100,W=window;let raw=[],pg=0,stns=[],CH={},calPg=0,calMonths=60;const $=id=>document.getElementById(id);
 const SRC_LABELS={'bom_acorn':'BOM ACORN-SAT','bom_api':'BOM API','noaa_ghcn':'NOAA GHCN'};
 const AUS="M 269.5 457.4 L 232.8 471.5 L 222.1 489.0 L 194.0 491.2 L 163.5 489.8 L 139.0 500.7 L 123.9 505.2 L 100.8 510.5 L 67.9 498.4 L 58.1 484.0 L 70.7 477.1 L 72.4 457.2 L 60.2 426.9 L 57.9 405.4 L 49.8 387.5 L 39.0 365.2 L 25.5 342.2 L 27.5 332.8 L 42.6 345.6 L 32.8 321.1 L 26.5 309.5 L 32.5 293.9 L 33.1 273.4 L 42.4 274.2 L 65.9 254.9 L 89.7 239.9 L 103.7 240.8 L 130.2 231.6 L 138.2 225.8 L 168.7 220.7 L 183.9 202.2 L 196.0 185.1 L 209.7 158.8 L 225.9 171.3 L 225.1 153.2 L 235.8 142.9 L 250.8 126.2 L 260.7 117.7 L 269.4 115.2 L 287.0 109.9 L 311.6 129.7 L 335.6 131.7 L 340.7 106.1 L 346.3 96.5 L 366.2 79.0 L 391.9 77.7 L 377.6 61.8 L 400.4 63.8 L 426.6 76.3 L 443.8 80.2 L 462.1 76.5 L 475.3 82.2 L 463.0 99.9 L 458.6 108.1 L 446.2 126.9 L 462.8 142.6 L 487.3 155.2 L 506.4 166.3 L 519.3 177.0 L 550.0 177.0 L 557.6 158.4 L 565.8 133.1 L 564.5 118.5 L 564.8 93.4 L 565.5 83.3 L 573.7 62.9 L 581.3 50.4 L 587.9 71.5 L 593.5 81.7 L 601.8 102.0 L 608.0 123.7 L 626.6 124.6 L 633.7 140.3 L 640.7 165.9 L 650.7 184.4 L 655.0 207.0 L 689.1 225.8 L 699.3 238.6 L 717.7 270.9 L 733.0 274.9 L 741.0 292.1 L 763.3 310.9 L 783.6 341.4 L 782.7 363.8 L 790.7 396.6 L 782.3 422.2 L 778.9 446.5 L 756.4 473.0 L 743.0 497.0 L 730.1 522.7 L 722.8 549.8 L 712.9 562.4 L 673.9 570.8 L 653.7 586.2 L 626.2 574.5 L 618.8 568.3 L 585.7 576.8 L 563.9 572.5 L 533.2 555.4 L 525.2 531.5 L 497.5 521.6 L 499.2 498.4 L 472.9 514.9 L 485.8 493.6 L 491.6 470.3 L 464.2 492.9 L 442.1 500.2 L 430.7 476.4 L 424.2 465.0 L 386.5 453.0 L 334.0 445.6 L 287.6 458.7 Z"
 const TAS="M 679.8 619.7 L 692.6 643.4 L 684.1 665.1 L 664.2 673.1 L 648.5 671.5 L 634.2 642.9 L 623.7 617.7 L 654.6 625.9 L 679.8 619.7 Z";
@@ -322,10 +323,20 @@ function renderAnomaly(){
 function renderCalendar(){
   const byMonth={};
   raw.forEach(d=>{if(d.tmax==null)return;const m=d.d.slice(0,7);byMonth[m]=byMonth[m]||[];byMonth[m].push(d.tmax)});
-  const months=Object.keys(byMonth).sort().slice(-36),data=months.map(m=>byMonth[m].reduce((a,b)=>a+b,0)/byMonth[m].length);
+  const allMonths=Object.keys(byMonth).sort();
+  const totalPg=Math.ceil(allMonths.length/calMonths);
+  if(calPg>=totalPg)calPg=totalPg-1;
+  if(calPg<0)calPg=0;
+  const months=allMonths.slice(calPg*calMonths,(calPg+1)*calMonths);
+  const data=months.map(m=>byMonth[m].reduce((a,b)=>a+b,0)/byMonth[m].length);
   const labels=months.map(m=>{const d=new Date(m+'-01');return d.toLocaleString('default',{month:'short'})+" '"+m.slice(2,4)});
   const cmax=Math.max(...data),cmin=Math.min(...data);
-  CH.cal=new Chart($('chart-cal'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>{const t=(v-cmin)/(cmax-cmin||1);return`rgb(${Math.round(26+t*170)},${Math.round(109+t*(-109+150))},${Math.round(93+t*(-93+60))})`}),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:9},maxTicksLimit:36}},y:{display:false,grid:{display:false}}}}});
+  if(CH.cal)CH.cal.destroy();
+  CH.cal=new Chart($('chart-cal'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>{const t=(v-cmin)/(cmax-cmin||1);return`rgb(${Math.round(26+t*170)},${Math.round(109+t*(-109+150))},${Math.round(93+t*(-93+60))})`}),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:8},maxTicksLimit:60,autoSkip:true,maxRotation:90}},y:{display:false,grid:{display:false}}}}});
+  $('cal-i').textContent=`${totalPg>0?calPg+1:0}/${totalPg}`;
+  $('cal-p').disabled=calPg<=0;
+  $('cal-n').disabled=calPg>=totalPg-1;
+  $('cal-range').textContent=months.length?`${months[0]} \u2014 ${months[months.length-1]}`:'No data';
   const md={};
   raw.forEach(d=>{if(d.tmax==null)return;const m=parseInt(d.d.slice(5,7)),y=d.d.slice(0,4);md[y]=md[y]||{};md[y][m]=md[y][m]||[];md[y][m].push(d.tmax)});
   const yrs=Object.keys(md).sort(),sd=yrs.flatMap(y=>Array.from({length:12},(_,i)=>{const av=md[y]?.[i+1];return av?av.reduce((a,b)=>a+b,0)/av.length:null})).filter(v=>v!=null);
@@ -419,6 +430,7 @@ function renderTable(){
 }
 
 $('load-btn').addEventListener('click',()=>{const sid=$('stn').value;if(sid)selectStation(sid)});
+['cal-p','cal-n'].forEach(id=>{$(id).addEventListener('click',()=>{calPg+=id==='cal-n'?1:-1;calPg=Math.max(0,Math.min(calPg,999));if(raw.length)renderCalendar()})});
 $('pp').addEventListener('click',()=>{if(pg>0){pg--;renderTable()}});
 $('np').addEventListener('click',()=>{if((pg+1)*PAGE<raw.length){pg++;renderTable()}});
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
