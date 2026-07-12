@@ -20,19 +20,19 @@ def _query_rest(sql, params=None):
     import requests, re
     table = "temperature_readings"
     if "FROM stations" in sql: table = "stations"
-    q = {}
+    q = []
     cols = "date,tmax,tmin,source"
     if "id,name,source" in sql or "id, name, source" in sql: cols = "id,name,source,latitude,longitude,elevation"
     if "COUNT(*)" in sql: return [("bom_acorn", 748696)]
     if params:
         date_idx = 0
         for p in params:
-            if p in ("bom_acorn", "bom_api", "noaa_ghcn"): q["source"] = f"eq.{p}"
+            if p in ("bom_acorn", "bom_api", "noaa_ghcn"): q.append(("source", f"eq.{p}"))
             elif isinstance(p, str) and len(p) == 10 and p[4] == "-":
-                if "date >= %s" in sql and date_idx == 0: q["date"] = f"gte.{p}"; date_idx += 1
-                elif "date <= %s" in sql: q["date"] = f"lte.{p}"
-                else: q["date"] = f"eq.{p}"
-            elif isinstance(p, str) and len(p) == 6 and p.isdigit(): q["station_id"] = f"eq.{p}"
+                if "date >= %s" in sql and date_idx == 0: q.append(("date", f"gte.{p}")); date_idx += 1
+                elif "date <= %s" in sql: q.append(("date", f"lte.{p}"))
+                else: q.append(("date", f"eq.{p}"))
+            elif isinstance(p, str) and len(p) == 6 and p.isdigit(): q.append(("station_id", f"eq.{p}"))
     order = "date.asc"
     m = re.search(r"ORDER BY (\w+)\s*(ASC|DESC)?", sql)
     if m: order = m.group(1) + (".desc" if m.group(2) == "DESC" else ".asc")
@@ -42,11 +42,11 @@ def _query_rest(sql, params=None):
     if "SELECT 1" in sql: return [(1,)]
     if "MIN(date)" in sql:
         h = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-        f = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params={**q, "select":"date","order":"date.asc","limit":"1"}, timeout=10).json()
-        l = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params={**q, "select":"date","order":"date.desc","limit":"1"}, timeout=10).json()
+        f = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params=q+[("select","date"),("order","date.asc"),("limit","1")], timeout=10).json()
+        l = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=h, params=q+[("select","date"),("order","date.desc"),("limit","1")], timeout=10).json()
         return [(f[0]["date"][:10] if f else None, l[0]["date"][:10] if l else None)]
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers, params={**q, "select":cols, "order":order, "limit":str(limit)}, timeout=30)
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=headers, params=q+[("select",cols),("order",order),("limit",str(limit))], timeout=30)
     if r.status_code != 200: raise Exception(f"Supabase error {r.status_code}")
     rows = []
     for item in r.json():
