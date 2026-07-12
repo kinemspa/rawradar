@@ -324,7 +324,6 @@ function refreshInsights(){
 function showView(view){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   event.currentTarget.classList.add('active');
-  if(view==='dashboard')renderTable();
 }
 
 function renderTable(){
@@ -338,10 +337,9 @@ function renderTable(){
 function renderWave(){
   if(CH.wave)CH.wave.destroy();
   if(!raw.length)return;
-  const data=raw.slice(-200).map(d=>d.tmax||0);
   const labels=raw.slice(-200).map(d=>d.d.slice(5,10));
+  const data=raw.slice(-200).map(d=>d.tmax||0);
   CH.wave=new Chart($('chart-wave'),{type:'line',data:{labels,datasets:[{data,borderColor:'#c026ff',backgroundColor:'rgba(192,38,255,0.05)',fill:true,pointRadius:0,tension:0.4,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,grid:{display:false}}}}});
-  CH.wave2=new Chart($('chart-wave2'),{type:'line',data:{labels,datasets:[{data,borderColor:'#67e8f9',backgroundColor:'rgba(103,232,249,0.05)',fill:true,pointRadius:0,tension:0.4,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
 }
 
 function updateTimeline(){
