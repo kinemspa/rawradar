@@ -109,8 +109,8 @@ def api_data(station_id:str,source:str=None,from_date:str=Query(None,alias="from
     try:
         params=[station_id]; clauses=["station_id=%s"]
         if source: clauses.append("source=%s"); params.append(source)
-        if from_date: clauses.append("date>=%s"); params.append(from_date)
-        if to_date: clauses.append("date<=%s"); params.append(to_date)
+        if from_date: clauses.append("date >= %s"); params.append(from_date)
+        if to_date: clauses.append("date <= %s"); params.append(to_date)
         rows = query(f"SELECT date,tmax,tmin,source FROM temperature_readings WHERE {' AND '.join(clauses)} ORDER BY date LIMIT %s",(*params,limit))
         return [{"d":str(r[0]),"tmax":float(r[1]) if r[1] else None,"tmin":float(r[2]) if r[2] else None,"src":r[3]} for r in rows]
     except Exception as e: return JSONResponse(status_code=500,content={"error":str(e)})
