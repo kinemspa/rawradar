@@ -190,9 +190,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <div class="flex-1 min-w-[200px]"><label class="text-[10px] text-zinc-600 mb-1.5 block uppercase tracking-wider font-medium">Station</label>
 <select id="stn" class="w-full bg-zinc-800/50 text-zinc-200 px-4 py-3 rounded-2xl text-sm border border-white/5"></select></div>
 <div class="flex-1 min-w-[260px]"><label class="text-[10px] text-zinc-600 mb-1.5 block uppercase tracking-wider font-medium">Year Range</label>
-<div class="flex items-center gap-3"><span class="text-xs text-zinc-500 w-7 text-center font-mono" id="yl">1910</span>
-<div class="flex-1 relative" style="height:24px"><input type="range" id="yr-s" class="absolute" min="1910" max="2024" value="2014" style="top:10px"><input type="range" id="yr-e" class="absolute" min="1910" max="2024" value="2024" style="top:10px;background:transparent"></div>
-<span class="text-xs text-zinc-500 w-7 text-center font-mono" id="yr">2024</span></div></div>
+<div class="relative pt-5 pb-1">
+<div class="flex justify-between text-[10px] text-zinc-600 mb-1"><span>1910</span><span id="yr-range-label" class="text-zinc-400 font-medium">2014 — 2024</span><span>2024</span></div>
+<div class="relative h-6">
+<div class="absolute top-2 left-0 right-0 h-1 bg-zinc-800 rounded-full"></div>
+<div id="yr-track" class="absolute top-2 h-1 rounded-full" style="left:0%;right:0%;background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>
+<div id="yr-s-label" class="absolute -top-1 text-xs font-bold text-blue-400 bg-zinc-900 px-1.5 rounded z-10 -translate-x-1/2 pointer-events-none" style="left:0%">2014</div>
+<div id="yr-e-label" class="absolute -top-1 text-xs font-bold text-blue-400 bg-zinc-900 px-1.5 rounded z-10 -translate-x-1/2 pointer-events-none" style="left:100%">2024</div>
+<input type="range" id="yr-s" class="absolute inset-0 w-full opacity-0 cursor-pointer z-20" min="1910" max="2024" value="2014">
+<input type="range" id="yr-e" class="absolute inset-0 w-full opacity-0 cursor-pointer z-20" min="1910" max="2024" value="2024">
+</div>
+</div></div>
 <button id="load-btn" class="px-6 py-3 rounded-2xl text-sm font-semibold text-white border-0 cursor-pointer" style="background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 0 30px rgba(59,130,246,0.2)">Load</button>
 <a id="dl-btn" class="px-5 py-3 rounded-2xl text-sm font-medium text-zinc-300 no-underline hidden cursor-pointer border border-white/5" style="background:rgba(24,24,27,0.4)">CSV</a>
 </div></div>
@@ -421,15 +429,20 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function
   setTimeout(()=>renderAll(),200);
 }));
 
-['yr-s','yr-e'].forEach(id=>{
-  const el=$(id);
-  el.addEventListener('input',function(){
-    const s=parseInt($('yr-s').value),e=parseInt($('yr-e').value);
-    if(s>e){if(this.id==='yr-s')$('yr-e').value=s;else $('yr-s').value=e;}
-    $('yl').textContent=$('yr-s').value;
-    $('yr').textContent=$('yr-e').value;
-  });
-});
+function updateSlider(){
+  const min=1910,max=2024;
+  const s=parseInt($('yr-s').value),e=parseInt($('yr-e').value);
+  if(s>e){$('yr-s').value=e;$('yr-e').value=s;}
+  const sp=((s-min)/(max-min)*100),ep=((e-min)/(max-min)*100);
+  $('yr-track').style.left=sp+'%';
+  $('yr-track').style.right=(100-ep)+'%';
+  $('yr-s-label').textContent=$('yr-s').value;
+  $('yr-s-label').style.left=sp+'%';
+  $('yr-e-label').textContent=$('yr-e').value;
+  $('yr-e-label').style.left=ep+'%';
+  $('yr-range-label').textContent=$('yr-s').value+' \u2014 '+$('yr-e').value;
+}
+['yr-s','yr-e'].forEach(id=>{$(id).addEventListener('input',updateSlider)});
 
 async function checkHealth(){
   try{
@@ -443,7 +456,7 @@ async function checkHealth(){
 }
 
 async function init(){
-  $('yr-s').value=2014;$('yr-e').value=2024;$('yl').textContent='2014';$('yr').textContent='2024';
+  $('yr-s').value=2014;$('yr-e').value=2024;updateSlider();
   checkHealth();
   try{
     stns=await(await fetch('/api/stations')).json();
