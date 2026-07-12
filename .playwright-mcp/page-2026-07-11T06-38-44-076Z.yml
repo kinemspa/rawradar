@@ -1,0 +1,38 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: RR
+      - heading "RawRadar" [level=1] [ref=e6]
+    - button "Connecting... ↻":
+      - generic: Connecting...
+      - generic: ↻
+  - generic [ref=e7]:
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: Station
+        - combobox [ref=e12]
+      - generic [ref=e13]:
+        - generic [ref=e14]: Source
+        - combobox [ref=e15]:
+          - option "BOM ACORN-SAT" [selected]
+          - option "BOM API"
+          - option "NOAA GHCN"
+      - generic [ref=e16]:
+        - generic [ref=e17]: From
+        - spinbutton [ref=e18]: "2010"
+      - generic [ref=e19]:
+        - generic [ref=e20]: To
+        - spinbutton [ref=e21]: "2025"
+      - button "Load" [ref=e22] [cursor=pointer]
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - heading "Temperature Readings" [level=2] [ref=e26]
+          - paragraph
+        - generic [ref=e27]:
+          - button "←" [disabled] [ref=e28]
+          - generic [ref=e29]: "0"
+          - button "→" [disabled] [ref=e30]
+      - generic [ref=e31]: Select a station and click Load
+  - contentinfo [ref=e33]:
+    - generic [ref=e34]: RawRadar

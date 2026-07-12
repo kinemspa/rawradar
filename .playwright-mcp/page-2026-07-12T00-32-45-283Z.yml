@@ -1,0 +1,65 @@
+- generic [ref=f23e2]:
+  - banner [ref=f23e3]:
+    - link "RR RawRadar Australian Climate Data" [ref=f23e4] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f23e5]: RR
+      - generic [ref=f23e6]:
+        - heading "RawRadar" [level=1] [ref=f23e7]
+        - paragraph [ref=f23e8]: Australian Climate Data
+    - button "DB" [ref=f23e10] [cursor=pointer]
+  - generic [ref=f23e13]:
+    - generic [ref=f23e14]:
+      - generic [ref=f23e15]:
+        - generic [ref=f23e16]:
+          - heading "Explore Stations" [level=2] [ref=f23e17]
+          - paragraph [ref=f23e18]: Click a marker to view climate data
+        - generic [ref=f23e19]:
+          - generic [ref=f23e20]: Has data
+          - generic [ref=f23e22]: Limited
+      - generic [ref=f23e24]: Loading stations...
+    - generic [ref=f23e28]:
+      - generic [ref=f23e29]:
+        - generic [ref=f23e30]: Station
+        - combobox [ref=f23e31]
+      - generic [ref=f23e32]:
+        - generic [ref=f23e33]: Year Range
+        - generic [ref=f23e34]:
+          - generic [ref=f23e35]: "1910"
+          - generic [ref=f23e36]:
+            - slider [ref=f23e37]: "2014"
+            - slider [ref=f23e38]: "2024"
+          - generic [ref=f23e39]: "2024"
+      - button "Load" [ref=f23e40] [cursor=pointer]
+    - generic [ref=f23e41]:
+      - button "Anomaly" [ref=f23e42] [cursor=pointer]
+      - button "Calendar" [ref=f23e43] [cursor=pointer]
+      - button "Monthly" [ref=f23e44] [cursor=pointer]
+      - button "Records" [ref=f23e45] [cursor=pointer]
+      - button "Scatter" [ref=f23e46] [cursor=pointer]
+      - button "Compare" [ref=f23e47] [cursor=pointer]
+    - generic [ref=f23e50]:
+      - generic [ref=f23e52]:
+        - generic [ref=f23e53]:
+          - heading "Temperature Anomaly" [level=2] [ref=f23e54]
+          - paragraph [ref=f23e55]: Annual deviation from 1961-1990 baseline
+        - generic [ref=f23e56]:
+          - generic [ref=f23e58]: Warm
+          - generic [ref=f23e60]: Cool
+      - generic [ref=f23e63]:
+        - heading "Climate Stripes" [level=3] [ref=f23e64]
+        - generic [ref=f23e66]:
+          - generic [ref=f23e67]: Colder
+          - generic [ref=f23e69]: Warmer
+    - generic [ref=f23e71]:
+      - generic [ref=f23e72]:
+        - generic [ref=f23e73]:
+          - heading "Daily Readings" [level=3] [ref=f23e74]
+          - paragraph
+        - generic [ref=f23e75]:
+          - button "←" [disabled] [ref=f23e76]
+          - generic [ref=f23e77]: "0"
+          - button "→" [disabled] [ref=f23e78]
+      - generic [ref=f23e79]: Click a station on the map or select from the dropdown
+  - contentinfo [ref=f23e81]:
+    - generic [ref=f23e82]: RawRadar
+    - generic [ref=f23e83]: Weather Data Transparency Project

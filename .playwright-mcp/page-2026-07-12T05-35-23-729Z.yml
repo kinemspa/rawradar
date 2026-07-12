@@ -1,0 +1,341 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "RR RawRadar Australian Climate Data" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e5]: RR
+        - generic [ref=e6]:
+          - heading "RawRadar" [level=1] [ref=e7]
+          - paragraph [ref=e8]: Australian Climate Data
+      - generic [ref=e9]:
+        - generic [ref=e70]: 748,696 records
+        - button "Connected" [ref=e71] [cursor=pointer]
+    - main [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - heading "Explore Stations" [level=2] [ref=e17]
+            - paragraph [ref=e18]: Click a marker to view climate data
+          - generic [ref=e19]:
+            - generic [ref=e20]: Has data
+            - generic [ref=e22]: Limited
+        - generic [ref=e24]:
+          - img [ref=e25]:
+            - generic [ref=e75]: Adelaide
+            - generic [ref=e78]: Alice Springs Airport
+            - generic [ref=e81]: Brisbane Aero
+            - generic [ref=e84]: Broome Airport
+            - generic [ref=e87]: Cairns Aero
+            - generic [ref=e90]: Camooweal
+            - generic [ref=e93]: Canberra Airport
+            - generic [ref=e96]: Darwin Airport
+            - generic [ref=e99]: Hobart
+            - generic [ref=e102]: Kalgoorlie-Boulder
+            - generic [ref=e105]: Launceston Airport
+            - generic [ref=e108]: Melbourne
+            - generic [ref=e111]: Mildura Airport
+            - generic [ref=e114]: Nowra
+            - generic [ref=e117]: Perth Airport
+            - generic [ref=e120]: Port Hedland
+            - generic [ref=e123]: Rockhampton Aero
+            - generic [ref=e126]: Sydney
+            - generic [ref=e129]: Townsville Aero
+            - generic [ref=e132]: Wagga Wagga AMO
+            - generic [ref=e135]: Sydney
+            - generic [ref=e136]: Perth
+            - generic [ref=e137]: Melbourne
+            - generic [ref=e138]: Darwin
+            - generic [ref=e139]: Brisbane
+            - generic [ref=e140]: Adelaide
+            - generic [ref=e141]: Hobart
+            - generic [ref=e142]: Cairns
+          - generic [ref=e26]: Loading stations...
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]: Station
+          - combobox [ref=e31]:
+            - option "Adelaide (West Terrace)" [selected]
+            - option "Alice Springs Airport"
+            - option "Brisbane Aero"
+            - option "Broome Airport"
+            - option "Cairns Aero"
+            - option "Camooweal"
+            - option "Canberra Airport"
+            - option "Darwin Airport"
+            - option "Hobart (Ellerslie Road)"
+            - option "Kalgoorlie-Boulder"
+            - option "Launceston Airport"
+            - option "Melbourne (Olympic Park)"
+            - option "Mildura Airport"
+            - option "Nowra"
+            - option "Perth Airport"
+            - option "Port Hedland"
+            - option "Rockhampton Aero"
+            - option "Sydney (Observatory Hill)"
+            - option "Townsville Aero"
+            - option "Wagga Wagga AMO"
+        - generic [ref=e32]:
+          - generic [ref=e33]: Year Range
+          - generic [ref=e34]:
+            - combobox [ref=e35]:
+              - option "1910"
+              - option "1911"
+              - option "1912"
+              - option "1913"
+              - option "1914"
+              - option "1915"
+              - option "1916"
+              - option "1917"
+              - option "1918"
+              - option "1919"
+              - option "1920"
+              - option "1921"
+              - option "1922"
+              - option "1923"
+              - option "1924"
+              - option "1925"
+              - option "1926"
+              - option "1927"
+              - option "1928"
+              - option "1929"
+              - option "1930"
+              - option "1931"
+              - option "1932"
+              - option "1933"
+              - option "1934"
+              - option "1935"
+              - option "1936"
+              - option "1937"
+              - option "1938"
+              - option "1939"
+              - option "1940"
+              - option "1941"
+              - option "1942"
+              - option "1943"
+              - option "1944"
+              - option "1945"
+              - option "1946"
+              - option "1947"
+              - option "1948"
+              - option "1949"
+              - option "1950"
+              - option "1951"
+              - option "1952"
+              - option "1953"
+              - option "1954"
+              - option "1955"
+              - option "1956"
+              - option "1957"
+              - option "1958"
+              - option "1959"
+              - option "1960"
+              - option "1961"
+              - option "1962"
+              - option "1963"
+              - option "1964"
+              - option "1965"
+              - option "1966"
+              - option "1967"
+              - option "1968"
+              - option "1969"
+              - option "1970"
+              - option "1971"
+              - option "1972"
+              - option "1973"
+              - option "1974"
+              - option "1975"
+              - option "1976"
+              - option "1977"
+              - option "1978"
+              - option "1979"
+              - option "1980"
+              - option "1981"
+              - option "1982"
+              - option "1983"
+              - option "1984"
+              - option "1985"
+              - option "1986"
+              - option "1987"
+              - option "1988"
+              - option "1989"
+              - option "1990"
+              - option "1991"
+              - option "1992"
+              - option "1993"
+              - option "1994"
+              - option "1995"
+              - option "1996"
+              - option "1997"
+              - option "1998"
+              - option "1999"
+              - option "2000"
+              - option "2001"
+              - option "2002"
+              - option "2003"
+              - option "2004"
+              - option "2005"
+              - option "2006"
+              - option "2007"
+              - option "2008"
+              - option "2009"
+              - option "2010"
+              - option "2011"
+              - option "2012"
+              - option "2013"
+              - option "2014" [selected]
+              - option "2015"
+              - option "2016"
+              - option "2017"
+              - option "2018"
+              - option "2019"
+              - option "2020"
+              - option "2021"
+              - option "2022"
+              - option "2023"
+              - option "2024"
+            - generic [ref=e36]:
+              - generic [ref=e37]:
+                - generic [ref=e38]: "1910"
+                - generic [ref=e39]: 2014 — 2024
+                - generic [ref=e40]: "2024"
+              - generic [ref=e41]:
+                - slider: "2014"
+                - slider: "2024"
+            - combobox [ref=e44]:
+              - option "1910"
+              - option "1911"
+              - option "1912"
+              - option "1913"
+              - option "1914"
+              - option "1915"
+              - option "1916"
+              - option "1917"
+              - option "1918"
+              - option "1919"
+              - option "1920"
+              - option "1921"
+              - option "1922"
+              - option "1923"
+              - option "1924"
+              - option "1925"
+              - option "1926"
+              - option "1927"
+              - option "1928"
+              - option "1929"
+              - option "1930"
+              - option "1931"
+              - option "1932"
+              - option "1933"
+              - option "1934"
+              - option "1935"
+              - option "1936"
+              - option "1937"
+              - option "1938"
+              - option "1939"
+              - option "1940"
+              - option "1941"
+              - option "1942"
+              - option "1943"
+              - option "1944"
+              - option "1945"
+              - option "1946"
+              - option "1947"
+              - option "1948"
+              - option "1949"
+              - option "1950"
+              - option "1951"
+              - option "1952"
+              - option "1953"
+              - option "1954"
+              - option "1955"
+              - option "1956"
+              - option "1957"
+              - option "1958"
+              - option "1959"
+              - option "1960"
+              - option "1961"
+              - option "1962"
+              - option "1963"
+              - option "1964"
+              - option "1965"
+              - option "1966"
+              - option "1967"
+              - option "1968"
+              - option "1969"
+              - option "1970"
+              - option "1971"
+              - option "1972"
+              - option "1973"
+              - option "1974"
+              - option "1975"
+              - option "1976"
+              - option "1977"
+              - option "1978"
+              - option "1979"
+              - option "1980"
+              - option "1981"
+              - option "1982"
+              - option "1983"
+              - option "1984"
+              - option "1985"
+              - option "1986"
+              - option "1987"
+              - option "1988"
+              - option "1989"
+              - option "1990"
+              - option "1991"
+              - option "1992"
+              - option "1993"
+              - option "1994"
+              - option "1995"
+              - option "1996"
+              - option "1997"
+              - option "1998"
+              - option "1999"
+              - option "2000"
+              - option "2001"
+              - option "2002"
+              - option "2003"
+              - option "2004"
+              - option "2005"
+              - option "2006"
+              - option "2007"
+              - option "2008"
+              - option "2009"
+              - option "2010"
+              - option "2011"
+              - option "2012"
+              - option "2013"
+              - option "2014"
+              - option "2015"
+              - option "2016"
+              - option "2017"
+              - option "2018"
+              - option "2019"
+              - option "2020"
+              - option "2021"
+              - option "2022"
+              - option "2023"
+              - option "2024" [selected]
+        - button "Load" [ref=e45] [cursor=pointer]
+      - generic [ref=e46]:
+        - button "Data" [ref=e47] [cursor=pointer]
+        - button "Calendar" [ref=e48] [cursor=pointer]
+        - button "Monthly" [ref=e49] [cursor=pointer]
+        - button "Records" [ref=e50] [cursor=pointer]
+        - button "Scatter" [ref=e51] [cursor=pointer]
+        - button "Compare" [ref=e52] [cursor=pointer]
+        - button "Anomaly" [ref=e53] [cursor=pointer]
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - heading "Daily Readings" [level=3] [ref=e59]
+            - paragraph [ref=e60]: Select a station and click Load
+          - generic [ref=e61]:
+            - button "←" [disabled] [ref=e62] [cursor=pointer]
+            - generic [ref=e63]: "0"
+            - button "→" [disabled] [ref=e64] [cursor=pointer]
+        - generic [ref=e65]: Click a station on the map or select from the dropdown
+  - contentinfo [ref=e67]:
+    - generic [ref=e68]: RawRadar
+    - generic [ref=e69]: Weather Data Transparency Project

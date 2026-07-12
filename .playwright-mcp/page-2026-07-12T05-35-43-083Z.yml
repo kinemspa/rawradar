@@ -1,0 +1,107 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e10]:
+      - text: AUSCLIMA
+      - generic [ref=f1e11]: HISTORICAL DATA AGGREGATOR
+    - generic [ref=f1e12]:
+      - combobox [ref=f1e13] [cursor=pointer]:
+        - option "Adelaide (West Terrace)" [selected]
+        - option "Alice Springs Airport"
+        - option "Brisbane Aero"
+        - option "Broome Airport"
+        - option "Cairns Aero"
+        - option "Camooweal"
+        - option "Canberra Airport"
+        - option "Darwin Airport"
+        - option "Hobart (Ellerslie Road)"
+        - option "Kalgoorlie-Boulder"
+        - option "Launceston Airport"
+        - option "Melbourne (Olympic Park)"
+        - option "Mildura Airport"
+        - option "Nowra"
+        - option "Perth Airport"
+        - option "Port Hedland"
+        - option "Rockhampton Aero"
+        - option "Sydney (Observatory Hill)"
+        - option "Townsville Aero"
+        - option "Wagga Wagga AMO"
+      - button "Load" [ref=f1e14] [cursor=pointer]
+      - generic [ref=f1e105]: 748,696 records
+      - button "Connected" [ref=f1e106] [cursor=pointer]
+  - generic [ref=f1e18]:
+    - generic [ref=f1e19]:
+      - generic [ref=f1e21]:
+        - generic [ref=f1e22] [cursor=pointer]:
+          - generic [ref=f1e23]: 
+          - generic [ref=f1e24]: DASHBOARD
+        - generic [ref=f1e25] [cursor=pointer]:
+          - generic [ref=f1e26]: 
+          - generic [ref=f1e27]: DATA TABLE
+        - generic [ref=f1e28] [cursor=pointer]:
+          - generic [ref=f1e29]: 
+          - generic [ref=f1e30]: CALENDAR
+        - generic [ref=f1e31] [cursor=pointer]:
+          - generic [ref=f1e32]: 
+          - generic [ref=f1e33]: TRENDS
+        - generic [ref=f1e34] [cursor=pointer]:
+          - generic [ref=f1e35]: 
+          - generic [ref=f1e36]: RECORDS
+        - generic [ref=f1e37] [cursor=pointer]: SCATTER
+        - generic [ref=f1e39] [cursor=pointer]:
+          - generic [ref=f1e40]: 
+          - generic [ref=f1e41]: COMPARE
+      - img [ref=f1e45]:
+        - generic [ref=f1e107]:
+          - generic [ref=f1e108]: Sydney
+          - generic [ref=f1e109]: Perth
+          - generic [ref=f1e110]: Melbourne
+          - generic [ref=f1e111]: Darwin
+          - generic [ref=f1e112]: Brisbane
+          - generic [ref=f1e113]: Adelaide
+          - generic [ref=f1e114]: Hobart
+      - generic [ref=f1e53]:
+        - generic [ref=f1e54]:
+          - generic [ref=f1e55]: STATION DATA
+          - generic [ref=f1e57]:
+            - generic [ref=f1e58]:
+              - generic [ref=f1e59]: TEMPERATURE
+              - generic [ref=f1e60]: "-"
+            - generic [ref=f1e61]:
+              - generic [ref=f1e62]: RECORDS
+              - generic [ref=f1e63]: "-"
+            - generic [ref=f1e64]:
+              - generic [ref=f1e65]: YEAR RANGE
+              - generic [ref=f1e66]: "-"
+            - generic [ref=f1e67]:
+              - generic [ref=f1e68]: BASELINE
+              - generic [ref=f1e69]: 1961-1990
+        - generic [ref=f1e70]:
+          - generic [ref=f1e71]: YEAR RANGE
+          - generic [ref=f1e72]:
+            - slider [ref=f1e73] [cursor=pointer]: "2014"
+            - slider [ref=f1e74] [cursor=pointer]: "2024"
+            - generic [ref=f1e75]:
+              - generic [ref=f1e76]: "2014"
+              - generic [ref=f1e77]: 2014-2024
+              - generic [ref=f1e78]: "2024"
+        - generic [ref=f1e79]:
+          - generic [ref=f1e80]: DATABASE STATUS
+          - generic [ref=f1e82]:
+            - generic [ref=f1e83]: 
+            - generic [ref=f1e84]: All systems nominal
+    - generic [ref=f1e86]:
+      - generic [ref=f1e87]:
+        - generic [ref=f1e88]:
+          - heading "Temperature Readings" [level=3] [ref=f1e89]
+          - paragraph [ref=f1e90]: Select a station
+        - generic [ref=f1e91]:
+          - button "Table" [ref=f1e92] [cursor=pointer]
+          - button "Anomaly" [ref=f1e93] [cursor=pointer]
+          - button "Calendar" [ref=f1e94] [cursor=pointer]
+          - button "Monthly" [ref=f1e95] [cursor=pointer]
+          - button "Records" [ref=f1e96] [cursor=pointer]
+        - generic [ref=f1e97]:
+          - button "←" [ref=f1e98] [cursor=pointer]
+          - generic [ref=f1e99]: "0"
+          - button "→" [ref=f1e100] [cursor=pointer]
+      - generic [ref=f1e101]: Click Load to view data

@@ -1,0 +1,115 @@
+- generic [ref=f5e2]:
+  - banner [ref=f5e3]:
+    - link "RR RawRadar Australian Climate Data" [ref=f5e4] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f5e5]: RR
+      - generic [ref=f5e6]:
+        - heading "RawRadar" [level=1] [ref=f5e7]
+        - paragraph [ref=f5e8]: Australian Climate Data
+    - generic [ref=f5e9]:
+      - generic [ref=f5e65]: 748,696 records
+      - button "Connected" [ref=f5e66] [cursor=pointer]
+  - generic [ref=f5e13]:
+    - generic [ref=f5e14]:
+      - generic [ref=f5e15]:
+        - generic [ref=f5e16]:
+          - heading "Explore Stations" [level=2] [ref=f5e17]
+          - paragraph [ref=f5e18]: Click a marker to view climate data
+        - generic [ref=f5e19]:
+          - generic [ref=f5e20]: Has data
+          - generic [ref=f5e22]: Limited
+      - img [ref=f5e25]:
+        - generic [ref=f5e70]: Adelaide
+        - generic [ref=f5e73]: Alice Springs Airport
+        - generic [ref=f5e76]: Brisbane Aero
+        - generic [ref=f5e79]: Broome Airport
+        - generic [ref=f5e82]: Cairns Aero
+        - generic [ref=f5e85]: Camooweal
+        - generic [ref=f5e88]: Canberra Airport
+        - generic [ref=f5e91]: Darwin Airport
+        - generic [ref=f5e94]: Hobart
+        - generic [ref=f5e97]: Kalgoorlie-Boulder
+        - generic [ref=f5e100]: Launceston Airport
+        - generic [ref=f5e103]: Melbourne
+        - generic [ref=f5e106]: Mildura Airport
+        - generic [ref=f5e109]: Nowra
+        - generic [ref=f5e112]: Perth Airport
+        - generic [ref=f5e115]: Port Hedland
+        - generic [ref=f5e118]: Rockhampton Aero
+        - generic [ref=f5e121]: Sydney
+        - generic [ref=f5e124]: Townsville Aero
+        - generic [ref=f5e127]: Wagga Wagga AMO
+        - generic [ref=f5e130]: Sydney
+        - generic [ref=f5e131]: Perth
+        - generic [ref=f5e132]: Melbourne
+        - generic [ref=f5e133]: Darwin
+        - generic [ref=f5e134]: Brisbane
+        - generic [ref=f5e135]: Adelaide
+        - generic [ref=f5e136]: Hobart
+        - generic [ref=f5e137]: Cairns
+    - generic [ref=f5e28]:
+      - generic [ref=f5e29]:
+        - generic [ref=f5e30]: Station
+        - combobox [ref=f5e31]:
+          - option "Adelaide (West Terrace)"
+          - option "Alice Springs Airport"
+          - option "Brisbane Aero"
+          - option "Broome Airport"
+          - option "Cairns Aero"
+          - option "Camooweal"
+          - option "Canberra Airport"
+          - option "Darwin Airport"
+          - option "Hobart (Ellerslie Road)"
+          - option "Kalgoorlie-Boulder"
+          - option "Launceston Airport"
+          - option "Melbourne (Olympic Park)"
+          - option "Mildura Airport"
+          - option "Nowra"
+          - option "Perth Airport"
+          - option "Port Hedland"
+          - option "Rockhampton Aero"
+          - option "Sydney (Observatory Hill)" [selected]
+          - option "Townsville Aero"
+          - option "Wagga Wagga AMO"
+      - generic [ref=f5e32]:
+        - generic [ref=f5e33]: Year Range
+        - generic [ref=f5e34]:
+          - generic [ref=f5e35]: "2014"
+          - generic [ref=f5e36]:
+            - slider [ref=f5e37]: "2014"
+            - slider [ref=f5e38]: "2024"
+          - generic [ref=f5e39]: "2024"
+      - button "Load" [ref=f5e40] [cursor=pointer]
+      - link "CSV" [ref=f5e138] [cursor=pointer]:
+        - /url: /api/export/066214?from=2014-01-01&to=2024-12-31
+    - generic [ref=f5e41]:
+      - button "Data" [ref=f5e42] [cursor=pointer]
+      - button "Calendar" [ref=f5e43] [cursor=pointer]
+      - button "Monthly" [ref=f5e44] [cursor=pointer]
+      - button "Records" [ref=f5e45] [cursor=pointer]
+      - button "Scatter" [ref=f5e46] [cursor=pointer]
+      - button "Compare" [ref=f5e47] [cursor=pointer]
+      - button "Anomaly" [ref=f5e48] [cursor=pointer]
+    - generic [ref=f5e549]:
+      - generic [ref=f5e551]:
+        - generic [ref=f5e552]:
+          - heading "Temperature Anomaly" [level=2] [ref=f5e553]
+          - paragraph [ref=f5e554]: Annual deviation from 1961-1990 baseline
+        - generic [ref=f5e555]:
+          - generic [ref=f5e557]: Warm
+          - generic [ref=f5e559]: Cool
+      - generic [ref=f5e562]:
+        - heading "Climate Stripes" [level=3] [ref=f5e563]
+        - generic [ref=f5e564]:
+          - 'generic "2014: 23.8°C" [ref=f5e565] [cursor=pointer]'
+          - 'generic "2015: 23.4°C" [ref=f5e566] [cursor=pointer]'
+          - 'generic "2016: 23.4°C" [ref=f5e567] [cursor=pointer]'
+        - generic [ref=f5e568]:
+          - generic [ref=f5e569]: "2014"
+          - generic [ref=f5e570]: "2016"
+        - generic [ref=f5e571]:
+          - generic [ref=f5e572]: Colder
+          - generic [ref=f5e574]: Warmer
+    - contentinfo [ref=f5e62]:
+      - generic [ref=f5e63]: RawRadar
+      - generic [ref=f5e64]: Weather Data Transparency Project

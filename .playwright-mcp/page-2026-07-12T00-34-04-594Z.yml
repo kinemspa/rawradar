@@ -1,0 +1,129 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - link "RR RawRadar Australian Climate Data" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e5]: RR
+      - generic [ref=e6]:
+        - heading "RawRadar" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Australian Climate Data
+    - generic [ref=e9]:
+      - generic [ref=e84]: 748,696 records
+      - button "Connected" [ref=e85] [cursor=pointer]
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Explore Stations" [level=2] [ref=e17]
+          - paragraph [ref=e18]: Click a marker to view climate data
+        - generic [ref=e19]:
+          - generic [ref=e20]: Has data
+          - generic [ref=e22]: Limited
+      - img [ref=e25]:
+        - generic [ref=e89]: Adelaide
+        - generic [ref=e92]: Alice Springs Airport
+        - generic [ref=e95]: Brisbane Aero
+        - generic [ref=e98]: Broome Airport
+        - generic [ref=e101]: Cairns Aero
+        - generic [ref=e104]: Camooweal
+        - generic [ref=e107]: Canberra Airport
+        - generic [ref=e110]: Darwin Airport
+        - generic [ref=e113]: Hobart
+        - generic [ref=e116]: Kalgoorlie-Boulder
+        - generic [ref=e119]: Launceston Airport
+        - generic [ref=e122]: Melbourne
+        - generic [ref=e125]: Mildura Airport
+        - generic [ref=e128]: Nowra
+        - generic [ref=e131]: Perth Airport
+        - generic [ref=e134]: Port Hedland
+        - generic [ref=e137]: Rockhampton Aero
+        - generic [ref=e140]: Sydney
+        - generic [ref=e143]: Townsville Aero
+        - generic [ref=e146]: Wagga Wagga AMO
+        - generic [ref=e149]: Sydney
+        - generic [ref=e150]: Perth
+        - generic [ref=e151]: Melbourne
+        - generic [ref=e152]: Darwin
+        - generic [ref=e153]: Brisbane
+        - generic [ref=e154]: Adelaide
+        - generic [ref=e155]: Hobart
+        - generic [ref=e156]: Cairns
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - generic [ref=e30]: Station
+        - combobox [ref=e31]:
+          - option "Adelaide (West Terrace)"
+          - option "Alice Springs Airport"
+          - option "Brisbane Aero"
+          - option "Broome Airport"
+          - option "Cairns Aero"
+          - option "Camooweal"
+          - option "Canberra Airport"
+          - option "Darwin Airport"
+          - option "Hobart (Ellerslie Road)"
+          - option "Kalgoorlie-Boulder"
+          - option "Launceston Airport"
+          - option "Melbourne (Olympic Park)"
+          - option "Mildura Airport"
+          - option "Nowra"
+          - option "Perth Airport"
+          - option "Port Hedland"
+          - option "Rockhampton Aero"
+          - option "Sydney (Observatory Hill)" [selected]
+          - option "Townsville Aero"
+          - option "Wagga Wagga AMO"
+      - generic [ref=e32]:
+        - generic [ref=e33]: Year Range
+        - generic [ref=e34]:
+          - generic [ref=e35]: "2014"
+          - generic [ref=e36]:
+            - slider [ref=e37]: "2014"
+            - slider [ref=e38]: "2024"
+          - generic [ref=e39]: "2024"
+      - button "Load" [ref=e40] [cursor=pointer]
+      - link "CSV" [ref=e157] [cursor=pointer]:
+        - /url: /api/export/066214?from=2014-01-01&to=2024-12-31
+    - generic [ref=e41]:
+      - button "Anomaly" [ref=e42] [cursor=pointer]
+      - button "Calendar" [ref=e43] [cursor=pointer]
+      - button "Monthly" [ref=e44] [cursor=pointer]
+      - button "Records" [ref=e45] [cursor=pointer]
+      - button "Scatter" [ref=e46] [cursor=pointer]
+      - button "Compare" [ref=e47] [cursor=pointer]
+    - generic [ref=e50]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - heading "Temperature Anomaly" [level=2] [ref=e54]
+          - paragraph [ref=e55]: Annual deviation from 1961-1990 baseline
+        - generic [ref=e56]:
+          - generic [ref=e58]: Warm
+          - generic [ref=e60]: Cool
+      - generic [ref=e63]:
+        - heading "Climate Stripes" [level=3] [ref=e64]
+        - generic [ref=e66]:
+          - generic [ref=e67]: Colder
+          - generic [ref=e69]: Warmer
+    - generic [ref=e71]:
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - heading "Sydney (Observatory Hill)" [level=3] [ref=e158]
+          - paragraph [ref=e159]: 1 readings
+        - generic [ref=e75]:
+          - button "←" [disabled] [ref=e76]
+          - generic [ref=e77]: 1/1
+          - button "→" [disabled] [ref=e78]
+      - generic [ref=e79]:
+        - table [ref=e160]:
+          - rowgroup [ref=e161]:
+            - row [ref=e162]:
+              - columnheader "Date" [ref=e163]
+              - columnheader "Max" [ref=e164]
+              - columnheader "Min" [ref=e165]
+          - rowgroup [ref=e166]:
+            - row [ref=e167]:
+              - cell "2024-12-31" [ref=e168]
+              - cell "30.1°" [ref=e169]
+              - cell "20.3°" [ref=e170]
+        - generic [ref=e171]: 1–1 of 1
+  - contentinfo [ref=e81]:
+    - generic [ref=e82]: RawRadar
+    - generic [ref=e83]: Weather Data Transparency Project
