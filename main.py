@@ -157,7 +157,7 @@ HOME = r"""<!DOCTYPE html>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#e4e4e7;overflow-x:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#e4e4e7;overflow-x:hidden;font-size:15px}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
@@ -188,19 +188,21 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 
 <div class="glass rounded-3xl p-5 lg:p-6 mb-6">
 <div class="flex flex-wrap items-end gap-4">
-<div class="flex-1 min-w-[200px]"><label class="text-[10px] text-zinc-600 mb-1.5 block uppercase tracking-wider font-medium">Station</label>
+<div class="flex-1 min-w-[200px]"><label class="text-xs text-zinc-500 mb-1.5 block font-medium">Station</label>
 <select id="stn" class="w-full bg-zinc-800/50 text-zinc-200 px-4 py-3 rounded-2xl text-sm border border-white/5"></select></div>
-<div class="flex-1 min-w-[260px]"><label class="text-[10px] text-zinc-600 mb-1.5 block uppercase tracking-wider font-medium">Year Range</label>
-<div class="relative pt-5 pb-1">
-<div class="flex justify-between text-[10px] text-zinc-600 mb-1"><span>1910</span><span id="yr-range-label" class="text-zinc-400 font-medium">2014 — 2024</span><span>2024</span></div>
+<div class="flex-1 min-w-[300px]"><label class="text-xs text-zinc-500 mb-1.5 block font-medium">Year Range</label>
+<div class="flex items-center gap-3">
+<select id="yr-s-sel" class="bg-zinc-800/50 text-zinc-200 px-3 py-3 rounded-2xl text-sm border border-white/5 w-24"></select>
+<div class="flex-1 relative pt-4 pb-2">
+<div class="flex justify-between text-xs text-zinc-600 mb-1"><span>1910</span><span id="yr-range-label" class="text-zinc-400 font-medium">2014 — 2024</span><span>2024</span></div>
 <div class="relative h-6">
 <div class="absolute top-2 left-0 right-0 h-1 bg-zinc-800 rounded-full"></div>
 <div id="yr-track" class="absolute top-2 h-1 rounded-full" style="left:0%;right:0%;background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>
-<div id="yr-s-label" class="absolute -top-1 text-xs font-bold text-blue-400 bg-zinc-900 px-1.5 rounded z-10 -translate-x-1/2 pointer-events-none" style="left:0%">2014</div>
-<div id="yr-e-label" class="absolute -top-1 text-xs font-bold text-blue-400 bg-zinc-900 px-1.5 rounded z-10 -translate-x-1/2 pointer-events-none" style="left:100%">2024</div>
 <input type="range" id="yr-s" class="absolute w-full cursor-pointer z-20" min="1910" max="2024" value="2014" style="top:0;left:0;height:24px;-webkit-appearance:none;background:transparent">
 <input type="range" id="yr-e" class="absolute w-full cursor-pointer z-20" min="1910" max="2024" value="2024" style="top:0;left:0;height:24px;-webkit-appearance:none;background:transparent">
 </div>
+</div>
+<select id="yr-e-sel" class="bg-zinc-800/50 text-zinc-200 px-3 py-3 rounded-2xl text-sm border border-white/5 w-24"></select>
 </div></div>
 <button id="load-btn" class="px-6 py-3 rounded-2xl text-sm font-semibold text-white border-0 cursor-pointer" style="background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 0 30px rgba(59,130,246,0.2)">Load</button>
 <a id="dl-btn" class="px-5 py-3 rounded-2xl text-sm font-medium text-zinc-300 no-underline hidden cursor-pointer border border-white/5" style="background:rgba(24,24,27,0.4)">CSV</a>
@@ -443,18 +445,17 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function
 
 function updateSlider(){
   const min=1910,max=2024;
-  const s=parseInt($('yr-s').value),e=parseInt($('yr-e').value);
-  if(s>e){$('yr-s').value=e;$('yr-e').value=s;}
+  let s=parseInt($('yr-s').value),e=parseInt($('yr-e').value);
+  if(s>e){const t=s;s=e;e=t;$('yr-s').value=s;$('yr-e').value=e;}
   const sp=((s-min)/(max-min)*100),ep=((e-min)/(max-min)*100);
   $('yr-track').style.left=sp+'%';
   $('yr-track').style.right=(100-ep)+'%';
-  $('yr-s-label').textContent=$('yr-s').value;
-  $('yr-s-label').style.left=sp+'%';
-  $('yr-e-label').textContent=$('yr-e').value;
-  $('yr-e-label').style.left=ep+'%';
-  $('yr-range-label').textContent=$('yr-s').value+' \u2014 '+$('yr-e').value;
+  $('yr-range-label').textContent=s+' \u2014 '+e;
+  $('yr-s-sel').value=s;
+  $('yr-e-sel').value=e;
 }
 ['yr-s','yr-e'].forEach(id=>{$(id).addEventListener('input',updateSlider)});
+['yr-s-sel','yr-e-sel'].forEach(id=>{$(id).addEventListener('change',function(){const v=parseInt(this.value);if(this.id==='yr-s-sel'){$('yr-s').value=v}else{$('yr-e').value=v}updateSlider()})});
 
 async function checkHealth(){
   try{
@@ -468,7 +469,9 @@ async function checkHealth(){
 }
 
 async function init(){
-  $('yr-s').value=2014;$('yr-e').value=2024;updateSlider();
+  const yrs=Array.from({length:115},(_,i)=>{const y=1910+i;return `<option value="${y}">${y}</option>`}).join('');
+  $('yr-s-sel').innerHTML=yrs;$('yr-e-sel').innerHTML=yrs;
+  $('yr-s').value=2014;$('yr-e').value=2024;$('yr-s-sel').value=2014;$('yr-e-sel').value=2024;updateSlider();
   checkHealth();
   try{
     stns=await(await fetch('/api/stations')).json();
