@@ -149,163 +149,200 @@ HOME = r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RawRadar</title>
+<title>AUSCLIMA</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#d4d4d8;overflow-x:hidden;font-size:20px;line-height:1.6}
-.glass{background:rgba(18,18,30,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.05)}
-.tab{padding:12px 28px;border-radius:16px;font-size:18px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#71717a;transition:all 0.2s}
-.tab:hover{background:rgba(255,255,255,0.04)}
-.tab-active{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.1));border-color:rgba(59,130,246,0.3);color:#93c5fd}
-select,input,button{font-size:18px;padding:14px 20px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;outline:none}
-select:focus,input:focus{border-color:rgba(59,130,246,0.5)}
-.pin{animation:pulse 2s ease-in-out infinite;cursor:pointer}
-.pin:hover{filter:brightness(1.3)}
-input[type=range]{-webkit-appearance:none;appearance:none;height:6px;background:transparent;outline:none;position:absolute;width:100%;top:6px;pointer-events:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#3b82f6;border:3px solid rgba(255,255,255,0.3);cursor:pointer;box-shadow:0 0 16px rgba(59,130,246,0.5);pointer-events:all;position:relative;z-index:30}
-.stn-label{font-size:13px;fill:#a1a1aa;pointer-events:none}
-.city-label{fill:rgba(255,255,255,0.1);font-size:14px;text-anchor:middle}
-table{width:100%;border-collapse:collapse;font-size:16px}
-th{text-align:left;padding:14px 20px;font-weight:500;color:#71717a;border-bottom:1px solid rgba(255,255,255,0.05)}
-td{padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.03);font-family:monospace}
-tr:hover{background:rgba(255,255,255,0.01)}
+:root{--accent-cyan:#67e8f9}
+body{font-family:'Inter',system-ui,sans-serif;background:#020617;color:white;overflow-x:hidden}
+.font-display{font-family:'Space Grotesk','Inter',sans-serif;font-weight:600}
+.glass{background:rgba(15,23,42,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.data-label{background:rgba(15,23,42,0.85);border:1px solid rgba(103,232,249,0.3);box-shadow:0 0 10px rgba(103,232,249,0.15)}
+.nav-item{transition:all 0.2s ease;cursor:pointer}
+.nav-item.active{background:rgba(103,232,249,0.1);color:#67e8f9;border-radius:0.5rem}
+.metric-row{transition:all 0.2s ease}
+.metric-row:hover{background:rgba(103,232,249,0.05);transform:translateX(2px)}
+.section-header{font-size:0.75rem;letter-spacing:1.5px;font-weight:600}
+.stat-value{font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;outline:none;width:100%;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#67e8f9;border:2px solid rgba(255,255,255,0.3);cursor:pointer;box-shadow:0 0 12px rgba(103,232,249,0.5)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:12px 16px;font-weight:500;color:#64748b;border-bottom:1px solid rgba(255,255,255,0.05)}
+td{padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.03);font-family:monospace}
+tr:hover{background:rgba(255,255,255,0.02)}
+.tab{transition:all 0.2s;cursor:pointer;padding:8px 20px;border-radius:12px;font-size:13px;border:1px solid rgba(255,255,255,0.08);color:#64748b}
+.tab:hover{background:rgba(103,232,249,0.05)}
+.tab-active{background:rgba(103,232,249,0.1);border-color:rgba(103,232,249,0.3);color:#67e8f9}
+.pin{animation:pulse 2s ease-in-out infinite;cursor:pointer}.pin:hover{filter:brightness(1.3)}
+@keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
 </style>
 </head>
 <body>
-<div style="min-height:100vh;display:flex;flex-direction:column">
-<header style="background:rgba(6,6,14,0.85);border-bottom:1px solid rgba(255,255,255,0.03);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(24px)">
-<a href="/" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit">
-<div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3b82f6,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;color:white;box-shadow:0 0 30px rgba(59,130,246,0.2);transition:transform 0.2s">RR</div>
-<div><h1 style="font-size:30px;font-weight:bold;color:white">RawRadar</h1><p style="font-size:15px;color:#71717a;margin-top:-2px;text-transform:uppercase;letter-spacing:0.05em">Australian Climate Data</p></div>
-</a>
-<div style="display:flex;align-items:center;gap:24px"><span style="color:#71717a;font-size:16px" id="rec-count"></span><button id="status-btn" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px"><span id="status-dot" style="width:8px;height:8px;border-radius:50%;background:#52525b;display:inline-block"></span><span id="status-text">DB</span></button></div>
-</header>
-
-<main style="flex:1;padding:30px 40px;width:100%;max-width:100%">
-<div id="error" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:24px;padding:20px;margin-bottom:24px;font-size:16px;color:#fca5a5"></div>
-
-<div style="border-radius:24px;padding:24px 32px;margin-bottom:32px;background:linear-gradient(135deg,rgba(6,6,20,0.95),rgba(10,10,30,0.95));border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px)">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-<div><h2 style="font-size:24px;font-weight:600;color:#e4e4e7">Explore Stations</h2><p style="font-size:16px;color:#71717a;margin-top:4px">Click a marker to view climate data</p></div>
-<div style="display:flex;align-items:center;gap:12px;font-size:16px;color:#71717a"><span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:#f97316;display:inline-block"></span> Has data</span><span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:#52525b;display:inline-block"></span> Limited</span></div>
+<div class="border-b border-white/10 bg-[#020617]/95 backdrop-blur-xl sticky top-0 z-50">
+<div class="max-w-[1480px] mx-auto px-8"><div class="flex items-center justify-between h-16">
+<div class="flex items-center gap-x-3">
+<div class="flex items-center justify-center w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 p-1.5 shadow-inner">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z" stroke="white" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 21V12M12 12L20 7.5M12 12L4 7.5" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
 </div>
-<div id="map-container" style="width:100%;height:min(75vh,550px);position:relative"><svg id="map-svg" style="width:100%;height:100%" viewBox="0 0 820 680" preserveAspectRatio="xMidYMid meet"></svg><div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#71717a;font-size:16px">Loading stations...</div></div>
+<div><span class="font-display text-3xl font-semibold tracking-tighter">AUSCLIMA</span>
+<div class="text-[10px] text-cyan-400/80 -mt-1 tracking-[2px]">HISTORICAL DATA AGGREGATOR</div></div></div>
+<div class="flex items-center gap-x-4">
+<select id="stn" class="bg-white/5 border border-white/10 rounded-2xl px-4 py-2 text-sm text-white cursor-pointer" style="min-width:200px"></select>
+<button id="load-btn" class="px-5 py-2 rounded-2xl text-sm font-medium bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg hover:shadow-cyan-500/25 transition-all">Load</button>
+<span class="text-xs text-white/60" id="rec-count"></span>
+<button id="status-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-2xl text-xs border border-white/10 bg-white/5"><span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-600"></span><span id="status-text" class="text-white/60">DB</span></button>
+</div></div></div></div>
+
+<div class="max-w-[1480px] mx-auto px-8 pt-6 pb-4">
+<div class="flex gap-6">
+<div class="w-56 flex-shrink-0">
+<div class="glass border border-white/10 rounded-3xl p-2">
+<div class="nav-item active flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1"><i class="fa-solid fa-th-large w-4 text-cyan-400"></i><span class="font-medium text-sm">DASHBOARD</span></div>
+<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-table w-4 text-white/70"></i><span class="font-medium text-sm">DATA TABLE</span></div>
+<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-calendar w-4 text-white/70"></i><span class="font-medium text-sm">CALENDAR</span></div>
+<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-chart-line w-4 text-white/70"></i><span class="font-medium text-sm">TRENDS</span></div>
+<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-temperature-high w-4 text-white/70"></i><span class="font-medium text-sm">RECORDS</span></div>
+<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-chart-scatter w-4 text-white/70"></i><span class="font-medium text-sm">SCATTER</span></div>
+<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl hover:bg-white/5"><i class="fa-solid fa-arrows-left-right w-4 text-white/70"></i><span class="font-medium text-sm">COMPARE</span></div>
+</div></div>
+
+<div class="flex-1 min-w-0">
+<div class="relative border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl" style="height:560px;box-shadow:0 25px 60px -15px rgba(0,0,0,0.5),0 0 0 1px rgba(103,232,249,0.08) inset;background:#050d1a">
+<div class="absolute inset-0 bg-[radial-gradient(#1e3a5f_0.6px,transparent_1px)] bg-[length:3px_3px] opacity-60"></div>
+<svg id="map-svg" width="100%" height="100%" viewBox="0 0 900 620" class="absolute inset-0">
+<defs>
+<radialGradient id="globeGrad" cx="45%" cy="35%" r="75%" fx="40%" fy="30%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="55%" stop-color="#0f172a"/><stop offset="100%" stop-color="#020617"/></radialGradient>
+<linearGradient id="ausGrad" x1="30%" y1="20%" x2="75%" y2="85%"><stop offset="0%" stop-color="#f97316"/><stop offset="35%" stop-color="#fb923c"/><stop offset="65%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#e11d48"/></linearGradient>
+<filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<ellipse cx="450" cy="310" rx="395" ry="275" fill="none" stroke="#67e8f9" stroke-width="3" opacity="0.12"/>
+<ellipse cx="450" cy="310" rx="375" ry="260" fill="none" stroke="#67e8f9" stroke-width="1.5" opacity="0.2"/>
+<ellipse cx="450" cy="310" rx="365" ry="255" fill="url(#globeGrad)" stroke="#334155" stroke-width="1"/>
+<g id="australia-group" class="australia-glow">
+<path id="aus-path" d="M 304 180 L 326 177 L 353 173 L 378 173 L 398 177 L 413 184 L 425 192 L 435 200 L 443 210 L 449 221 L 452 232 L 450 243 L 446 252 L 440 259 L 433 266 L 425 272 L 416 278 L 408 284 L 400 290 L 391 296 L 383 302 L 374 307 L 366 312 L 357 316 L 350 319 L 346 324 L 342 329 L 335 334 L 327 339 L 319 342 L 312 345 L 304 347 L 296 348 L 287 350 L 276 352 L 265 354 L 255 356 L 246 358 L 236 360 L 226 363 L 217 367 L 209 372 L 202 378 L 197 385 L 192 392 L 186 401 L 179 411 L 173 421 L 167 431 L 162 441 L 157 451 L 152 461 L 147 471 L 142 481 L 137 490 L 133 498 L 130 504 L 127 509 L 123 513 L 118 516 L 112 517 L 105 516 L 99 513 L 94 509 L 89 504 L 85 497 L 83 490 L 82 482 L 83 474 L 85 466 L 88 458 L 92 451 L 96 445 L 101 439 L 106 433 L 111 428 L 117 423 L 122 419 L 128 415 L 133 411 L 139 406 L 144 401 L 149 396 L 153 391 L 157 385 L 161 379 L 164 373 L 167 367 L 169 361 L 172 354 L 175 347 L 178 340 L 180 333 L 183 326 L 186 319 L 188 312 L 191 305 L 193 299 L 196 293 L 198 287 L 201 281 L 204 276 L 207 272 L 210 268 L 214 264 L 218 260 L 222 256 L 227 252 L 232 249 L 237 246 L 243 243 L 249 240 L 256 238 L 263 236 L 270 234 L 277 233 L 284 232 L 290 232 L 296 231 L 302 230 L 307 229 L 311 226 L 314 222 L 316 218 L 316 213 L 315 207 L 312 202 L 308 197 L 303 193 L 304 180 Z" fill="url(#ausGrad)" stroke="#bae6fd" stroke-width="2.5" filter="url(#neonGlow)"/>
+<ellipse cx="490" cy="550" rx="30" ry="20" fill="#67e8f9" stroke="#bae6fd" stroke-width="1.5" opacity="0.8"/>
+</g>
+<g id="pins-group"></g>
+</svg>
+<div id="map-loading" class="absolute inset-0 flex items-center justify-center text-white/40 text-sm">Loading stations...</div>
+</div></div>
+
+<div class="w-72 flex-shrink-0 space-y-3">
+<div class="glass border border-white/10 rounded-3xl p-4">
+<div class="flex items-center justify-between mb-3"><div class="section-header text-white/70">STATION DATA</div></div>
+<div id="station-metrics" class="space-y-2 text-sm">
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">TEMPERATURE</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="metric-temp">-</span></div>
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">RECORDS</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="metric-records">-</span></div>
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">YEAR RANGE</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="metric-years">-</span></div>
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">BASELINE</span><span class="font-mono text-cyan-400 font-semibold stat-value">1961-1990</span></div>
+</div></div>
+<div class="glass border border-white/10 rounded-3xl p-4">
+<div class="section-header text-white/70 mb-3">YEAR RANGE</div>
+<div class="px-1 pt-2 pb-1">
+<input type="range" id="yr-s" min="1910" max="2024" value="2014" oninput="updateSlider()">
+<input type="range" id="yr-e" min="1910" max="2024" value="2024" oninput="updateSlider()" style="margin-top:2px">
+<div class="flex justify-between text-[10px] text-white/40 px-1 mt-1 font-mono"><span id="yl">1910</span><span id="yr-range" class="text-cyan-400">2014-2024</span><span id="yr">2024</span></div>
+</div></div>
+<div class="glass border border-white/10 rounded-3xl p-4">
+<div class="section-header text-white/70 mb-3">DATABASE STATUS</div>
+<div class="flex items-center justify-between text-xs bg-white/5 border border-white/10 rounded-2xl px-3 py-2"><div class="flex items-center gap-x-2"><i class="fa-solid fa-check-circle text-emerald-400"></i><span class="text-emerald-400 text-xs" id="db-status">Checking...</span></div></div>
+</div></div></div>
+
+<div class="mt-6"><div class="glass border border-white/10 rounded-3xl overflow-hidden">
+<div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+<div><h3 class="font-display text-lg" id="table-title">Temperature Readings</h3><p class="text-xs text-white/50" id="table-sub">Select a station</p></div>
+<div class="flex gap-2" id="tabs">
+<button class="tab tab-active" data-view="table">Table</button>
+<button class="tab" data-view="anomaly">Anomaly</button>
+<button class="tab" data-view="calendar">Calendar</button>
+<button class="tab" data-view="monthly">Monthly</button>
+<button class="tab" data-view="records">Records</button>
 </div>
-
-<div style="border-radius:24px;padding:24px 32px;margin-bottom:32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)">
-<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px">
-<div style="flex:1;min-width:280px"><label style="font-size:16px;color:#71717a;display:block;margin-bottom:8px">Station</label><select id="stn" style="width:100%;padding:16px 20px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;font-size:18px;outline:none"></select></div>
-<div style="flex:2;min-width:400px"><label style="font-size:16px;color:#71717a;display:block;margin-bottom:8px">Year Range</label>
-<div style="display:flex;align-items:center;gap:16px">
-<select id="yr-s-sel" style="padding:16px 12px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;font-size:18px;width:90px;text-align:center;outline:none"></select>
-<div style="flex:1;position:relative;padding-top:16px;padding-bottom:8px">
-<div style="display:flex;justify-content:space-between;font-size:16px;color:#52525b;margin-bottom:8px"><span>1910</span><span id="yr-range-label" style="color:#a1a1aa;font-weight:600">2014 &mdash; 2024</span><span>2024</span></div>
-<div style="position:relative;height:32px">
-<div style="position:absolute;top:12px;left:0;right:0;height:6px;background:#27272a;border-radius:3px"></div>
-<div id="yr-track" style="position:absolute;top:12px;height:6px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#6366f1);left:0%;right:0%"></div>
-<input type="range" id="yr-s" min="1910" max="2024" value="2014" style="position:absolute;width:100%;top:0;left:0;height:32px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;z-index:20">
-<input type="range" id="yr-e" min="1910" max="2024" value="2024" style="position:absolute;width:100%;top:0;left:0;height:32px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;z-index:20">
-</div></div>
-<select id="yr-e-sel" style="padding:16px 12px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;font-size:18px;width:90px;text-align:center;outline:none"></select>
-</div></div>
-<button id="load-btn" style="padding:16px 36px;border-radius:16px;font-size:18px;font-weight:600;color:white;border:none;cursor:pointer;background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 0 30px rgba(59,130,246,0.25)">Load</button>
-<a id="dl-btn" style="display:none;padding:16px 28px;border-radius:16px;font-size:18px;color:#a1a1aa;text-decoration:none;cursor:pointer;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.4)">CSV</a>
-</div></div>
-
-<div id="tabs" style="display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap">
-<button class="tab tab-active" data-tab="table">Data</button>
-<button class="tab" data-tab="calendar">Calendar</button>
-<button class="tab" data-tab="monthly">Monthly</button>
-<button class="tab" data-tab="records">Records</button>
-<button class="tab" data-tab="scatter">Scatter</button>
-<button class="tab" data-tab="compare">Compare</button>
-<button class="tab" data-tab="anomaly">Anomaly</button>
-</div>
-
-<div id="views">
-<div class="view" id="v-table">
-<div style="border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid rgba(255,255,255,0.05)">
-<div><h3 style="font-size:20px;font-weight:600;color:#e4e4e7" id="tbl-title">Daily Readings</h3><p style="font-size:16px;color:#71717a;margin-top:4px" id="tbl-sub">Select a station and click Load</p></div>
-<div style="display:flex;align-items:center;gap:16px"><button id="pp" style="padding:10px 18px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px" disabled>&larr;</button><span id="pi" style="font-size:16px;color:#71717a;width:60px;text-align:center;font-family:monospace">0</span><button id="np" style="padding:10px 18px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px" disabled>&rarr;</button></div></div>
-<div id="tbl" style="overflow-x:auto"><div style="text-align:center;padding:60px 20px;color:#52525b;font-size:16px">Click a station on the map or select from the dropdown</div></div>
-</div></div>
-
-<div class="view hidden" id="v-calendar"><div style="display:grid;grid-template-columns:1fr;gap:24px">
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7">Calendar Heatmap</h2><div style="display:flex;align-items:center;gap:12px"><button id="cal-p" style="padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px">&larr;</button><span id="cal-i" style="font-size:16px;color:#71717a;width:60px;text-align:center">1/1</span><button id="cal-n" style="padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px">&rarr;</button></div></div><p style="font-size:16px;color:#71717a;margin-bottom:16px">Monthly average max temps &mdash; <span id="cal-range"></span></p><div style="min-height:280px"><canvas id="chart-cal"></canvas></div><div style="display:flex;justify-content:center;gap:16px;margin-top:16px;font-size:15px;color:#71717a"><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#1e3a5f"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#2b6cb0"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#63b3ed"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#fbd38d"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#ed8936"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#c53030"></span><span style="margin-left:4px">Hot</span></span></div></div>
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:12px">Temperature Spiral</h2><p style="font-size:16px;color:#71717a;margin-bottom:16px">Annual cycle &mdash; each ring is one year</p><div style="min-height:300px"><canvas id="chart-spiral"></canvas></div></div>
-</div></div>
-
-<div class="view hidden" id="v-monthly">
-<div style="border-radius:24px;padding:24px 32px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Monthly Temperature Cycle</h2><div style="min-height:280px"><canvas id="chart-monthly"></canvas></div></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px"><div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:18px;font-weight:600;color:#e4e4e7;margin-bottom:16px">January <span style="color:#71717a">- summer trend</span></h3><div style="min-height:180px"><canvas id="chart-month-jan"></canvas></div></div>
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:18px;font-weight:600;color:#e4e4e7;margin-bottom:16px">July <span style="color:#71717a">- winter trend</span></h3><div style="min-height:180px"><canvas id="chart-month-jul"></canvas></div></div></div></div>
-
-<div class="view hidden" id="v-records"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px">
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Record Highs</h3><div style="min-height:200px"><canvas id="chart-rec-high"></canvas></div></div>
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Record Lows</h3><div style="min-height:200px"><canvas id="chart-rec-low"></canvas></div></div>
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Extreme Range</h3><div style="min-height:200px"><canvas id="chart-rec-range"></canvas></div></div>
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Days &gt;35&deg;C</h3><div style="min-height:200px"><canvas id="chart-rec-hotdays"></canvas></div></div>
-</div></div>
-
-<div class="view hidden" id="v-scatter"><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Max vs Min Temp</h3><div style="min-height:280px"><canvas id="chart-scatter"></canvas></div></div>
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Distribution</h3><div style="min-height:280px"><canvas id="chart-dist"></canvas></div></div>
-</div></div>
-
-<div class="view hidden" id="v-compare"><div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Station Comparison</h2><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="compare-stns"></div><div style="min-height:280px"><canvas id="chart-compare"></canvas></div></div></div>
-
-<div class="view hidden" id="v-anomaly"><div style="display:grid;grid-template-columns:2fr 1fr;gap:24px">
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:600;color:#e4e4e7">Temperature Anomaly</h2><p style="font-size:16px;color:#71717a;margin-top:4px">Annual deviation from 1961-1990 baseline</p></div><div style="display:flex;align-items:center;gap:8px;font-size:16px"><span style="width:16px;height:16px;display:inline-block;border-radius:4px;background:rgba(239,68,68,0.7)"></span><span style="color:#71717a">Warm</span><span style="width:16px;height:16px;display:inline-block;border-radius:4px;margin-left:8px;background:rgba(59,130,246,0.7)"></span><span style="color:#71717a">Cool</span></div></div><div style="min-height:280px"><canvas id="chart-anomaly"></canvas></div></div>
-<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:18px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Climate Stripes</h3><div id="stripes" style="display:flex;height:260px;border-radius:16px;overflow:hidden"></div><div style="display:flex;justify-content:space-between;font-size:16px;color:#71717a;margin-top:8px"><span id="s-start"></span><span id="s-end"></span></div><div style="display:flex;align-items:center;gap:16px;margin-top:12px;font-size:16px;color:#71717a"><span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:16px;display:inline-block;border-radius:4px;background:#1e3a5f"></span>Colder</span><span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:16px;display:inline-block;border-radius:4px;background:#8b1a1a"></span>Warmer</span></div></div>
-</div></div>
-</div></div>
-
-<footer style="border-top:1px solid rgba(255,255,255,0.03);padding:20px 40px;font-size:16px;color:#52525b;display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,14,0.85);backdrop-filter:blur(24px)"><span>RawRadar</span><span>Weather Data Transparency Project</span></footer>
-</div>
+<div class="flex items-center gap-2"><button id="pp" class="px-3 py-1.5 rounded-xl bg-white/5 text-white/50 disabled:opacity-30 text-xs border border-white/10">&larr;</button><span id="pi" class="text-xs text-white/50 font-mono w-12 text-center">0</span><button id="np" class="px-3 py-1.5 rounded-xl bg-white/5 text-white/50 disabled:opacity-30 text-xs border border-white/10">&rarr;</button></div></div>
+<div id="views"><div id="v-table"><div id="tbl" class="overflow-x-auto"><div class="text-center py-16 text-white/30 text-sm">Click Load to view data</div></div></div>
+<div id="v-anomaly" class="hidden" style="height:350px"><canvas id="chart-anomaly"></canvas></div>
+<div id="v-calendar" class="hidden" style="height:350px"><canvas id="chart-cal"></canvas></div>
+<div id="v-monthly" class="hidden" style="height:350px"><canvas id="chart-monthly"></canvas></div>
+<div id="v-records" class="hidden"><div class="grid grid-cols-4 gap-4 p-4"><div style="height:180px"><canvas id="chart-rec-high"></canvas></div><div style="height:180px"><canvas id="chart-rec-low"></canvas></div><div style="height:180px"><canvas id="chart-rec-range"></canvas></div><div style="height:180px"><canvas id="chart-rec-hotdays"></canvas></div></div></div>
+</div></div></div></div>
 
 <script>
-const PAGE=100,W=window;let raw=[],pg=0,stns=[],CH={},calPg=0,calMonths=60;const $=id=>document.getElementById(id);
-const AUS="M 269.5 457.4 L 232.8 471.5 L 222.1 489.0 L 194.0 491.2 L 163.5 489.8 L 139.0 500.7 L 123.9 505.2 L 100.8 510.5 L 67.9 498.4 L 58.1 484.0 L 70.7 477.1 L 72.4 457.2 L 60.2 426.9 L 57.9 405.4 L 49.8 387.5 L 39.0 365.2 L 25.5 342.2 L 27.5 332.8 L 42.6 345.6 L 32.8 321.1 L 26.5 309.5 L 32.5 293.9 L 33.1 273.4 L 42.4 274.2 L 65.9 254.9 L 89.7 239.9 L 103.7 240.8 L 130.2 231.6 L 138.2 225.8 L 168.7 220.7 L 183.9 202.2 L 196.0 185.1 L 209.7 158.8 L 225.9 171.3 L 225.1 153.2 L 235.8 142.9 L 250.8 126.2 L 260.7 117.7 L 269.4 115.2 L 287.0 109.9 L 311.6 129.7 L 335.6 131.7 L 340.7 106.1 L 346.3 96.5 L 366.2 79.0 L 391.9 77.7 L 377.6 61.8 L 400.4 63.8 L 426.6 76.3 L 443.8 80.2 L 462.1 76.5 L 475.3 82.2 L 463.0 99.9 L 458.6 108.1 L 446.2 126.9 L 462.8 142.6 L 487.3 155.2 L 506.4 166.3 L 519.3 177.0 L 550.0 177.0 L 557.6 158.4 L 565.8 133.1 L 564.5 118.5 L 564.8 93.4 L 565.5 83.3 L 573.7 62.9 L 581.3 50.4 L 587.9 71.5 L 593.5 81.7 L 601.8 102.0 L 608.0 123.7 L 626.6 124.6 L 633.7 140.3 L 640.7 165.9 L 650.7 184.4 L 655.0 207.0 L 689.1 225.8 L 699.3 238.6 L 717.7 270.9 L 733.0 274.9 L 741.0 292.1 L 763.3 310.9 L 783.6 341.4 L 782.7 363.8 L 790.7 396.6 L 782.3 422.2 L 778.9 446.5 L 756.4 473.0 L 743.0 497.0 L 730.1 522.7 L 722.8 549.8 L 712.9 562.4 L 673.9 570.8 L 653.7 586.2 L 626.2 574.5 L 618.8 568.3 L 585.7 576.8 L 563.9 572.5 L 533.2 555.4 L 525.2 531.5 L 497.5 521.6 L 499.2 498.4 L 472.9 514.9 L 485.8 493.6 L 491.6 470.3 L 464.2 492.9 L 442.1 500.2 L 430.7 476.4 L 424.2 465.0 L 386.5 453.0 L 334.0 445.6 L 287.6 458.7 Z";
-const TAS="M 679.8 619.7 L 692.6 643.4 L 684.1 665.1 L 664.2 673.1 L 648.5 671.5 L 634.2 642.9 L 623.7 617.7 L 654.6 625.9 L 679.8 619.7 Z";
-const PINS={"066214":{x:747,y:488},"086338":{x:628,y:563},"040842":{x:783,y:366},"009021":{x:76,y:452},"023000":{x:507,y:508},"094029":{x:673,y:659},"014015":{x:360,y:84},"070351":{x:709,y:516},"031011":{x:643,y:168},"004032":{x:126,y:234},"032040":{x:662,y:212},"076031":{x:573,y:496},"037010":{x:498,y:225},"072150":{x:675,y:513},"015590":{x:417,y:298},"091311":{x:669,y:631},"039083":{x:733,y:290},"003003":{x:195,y:188},"012038":{x:180,y:430},"068072":{x:734,y:509}};
+const PAGE=100;let raw=[],pg=0,stns=[],CH={};const $=id=>document.getElementById(id);
 const DATA_STNS=["066214","086338","040842","009021","031011","014015","023000","094029","070351"];
+const PIN_POS={066214:{x:578,y:226},086338:{x:505,y:244},040842:{x:590,y:178},009021:{x:345,y:217},031011:{x:555,y:120},014015:{x:420,y:60},023000:{x:470,y:230},094029:{x:525,y:273},070351:{x:545,y:235},004032:{x:365,y:130},032040:{x:565,y:145},076031:{x:510,y:225},037010:{x:485,y:140},072150:{x:545,y:238},015590:{x:440,y:160},091311:{x:530,y:265},039083:{x:570,y:175},003003:{x:385,y:115},012038:{x:395,y:200},068072:{x:570,y:230}};
 
 function drawMap(){
-  const svg=$('map-svg');svg.innerHTML='';const ns='http://www.w3.org/2000/svg';
-  const d=document.createElementNS(ns,'defs');
-  d.innerHTML='<linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1628"/><stop offset="100%" stop-color="#0d1f3c"/></linearGradient><filter id="gl"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
-  svg.appendChild(d);
-  const bg=document.createElementNS(ns,'rect');bg.setAttribute('width','820');bg.setAttribute('height','680');bg.setAttribute('fill','url(#sg)');bg.setAttribute('rx','16');svg.appendChild(bg);
-  [AUS,TAS].forEach((p,i)=>{const e=document.createElementNS(ns,'path');e.setAttribute('d',p);e.setAttribute('fill','rgba(20,30,50,0.5)');e.setAttribute('stroke','rgba(59,130,246,0.25)');e.setAttribute('stroke-width',i?'1':'2');svg.appendChild(e);});
-  stns.forEach(s=>{const pin=PINS[s.id];if(!pin)return;const has=DATA_STNS.includes(s.id);const g=document.createElementNS(ns,'g');const c=document.createElementNS(ns,'circle');c.setAttribute('cx',pin.x);c.setAttribute('cy',pin.y);c.setAttribute('r',has?'7':'5');c.setAttribute('fill',has?'#f97316':'#52525b');c.setAttribute('stroke','rgba(255,255,255,0.2)');c.setAttribute('stroke-width','2');c.setAttribute('filter','url(#gl)');c.setAttribute('class','pin');c.dataset.id=s.id;c.addEventListener('click',()=>selectStation(s.id));g.appendChild(c);const t=document.createElementNS(ns,'text');t.setAttribute('x',pin.x);t.setAttribute('y',pin.y-16);t.setAttribute('font-size','13');t.setAttribute('fill','#a1a1aa');t.setAttribute('text-anchor','middle');t.textContent=s.name.split('(')[0].trim();g.appendChild(t);svg.appendChild(g);});
-  [{n:'Sydney',x:755,y:516},{n:'Perth',x:78,y:478},{n:'Melbourne',x:635,y:588},{n:'Darwin',x:360,y:108},{n:'Brisbane',x:783,y:396},{n:'Adelaide',x:505,y:533},{n:'Hobart',x:680,y:682},{n:'Cairns',x:648,y:192}].forEach(c=>{const t=document.createElementNS(ns,'text');t.setAttribute('x',c.x);t.setAttribute('y',c.y);t.setAttribute('fill','rgba(255,255,255,0.1)');t.setAttribute('font-size','14');t.setAttribute('text-anchor','middle');t.textContent=c.n;svg.appendChild(t);});
+  const svg=$('map-svg');const ns='http://www.w3.org/2000/svg';
+  const g=svg.querySelector('#pins-group');if(!g)return;
+  g.innerHTML='';
+  stns.forEach(s=>{
+    const pin=PIN_POS[s.id];if(!pin)return;
+    const has=DATA_STNS.includes(s.id);
+    const c=document.createElementNS(ns,'circle');
+    c.setAttribute('cx',pin.x);c.setAttribute('cy',pin.y);
+    c.setAttribute('r',has?'5':'3.5');
+    c.setAttribute('fill',has?'#67e8f9':'#64748b');
+    c.setAttribute('stroke','rgba(255,255,255,0.3)');
+    c.setAttribute('stroke-width','1.5');
+    c.setAttribute('class','pin');
+    c.dataset.id=s.id;
+    c.addEventListener('click',()=>selectStation(s.id));
+    g.appendChild(c);
+    const t=document.createElementNS(ns,'text');
+    t.setAttribute('x',pin.x);t.setAttribute('y',pin.y-10);
+    t.setAttribute('fill','#94a3b8');t.setAttribute('font-size','9');
+    t.setAttribute('text-anchor','middle');
+    t.textContent=s.name.split('(')[0].trim();
+    g.appendChild(t);
+  });
+  [{n:'Sydney',x:578,y:244},{n:'Perth',x:345,y:235},{n:'Melbourne',x:505,y:262},{n:'Darwin',x:420,y:78},{n:'Brisbane',x:590,y:196},{n:'Adelaide',x:470,y:248},{n:'Hobart',x:525,y:290}].forEach(c=>{
+    const t=document.createElementNS(ns,'text');
+    t.setAttribute('x',c.x);t.setAttribute('y',c.y);
+    t.setAttribute('fill','rgba(255,255,255,0.08)');t.setAttribute('font-size','10');
+    t.setAttribute('text-anchor','middle');t.textContent=c.n;
+    g.appendChild(t);
+  });
   $('map-loading').classList.add('hidden');
 }
 
 async function selectStation(id){
-  $('stn').value=id;$('error').classList.add('hidden');
+  $('stn').value=id;
   const f=$('yr-s').value+'-01-01',t=$('yr-e').value+'-12-31';
   try{
     const r=await fetch(`/api/data/${id}?from=${f}&to=${t}&limit=50000`);
     if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||`HTTP ${r.status}`);
     raw=await r.json();if(raw.error)throw new Error(raw.error);pg=0;
     const name=$('stn').selectedOptions[0]?.text||id;
-    $('tbl-title').textContent=name;$('tbl-sub').textContent=raw.length?`${raw.length.toLocaleString()} readings`:'No data';
-    $('dl-btn').href=`/api/export/${id}?from=${f}&to=${t}`;$('dl-btn').classList.remove('hidden');
+    $('table-title').textContent=name;$('table-sub').textContent=raw.length?`${raw.length.toLocaleString()} readings`:'No data';
+    const mn=raw.reduce((a,b)=>Math.max(a,b.tmax||0),0);
+    $('metric-temp').textContent=mn?mn.toFixed(1)+'\u00b0C max':'-';
+    $('metric-records').textContent=raw.length.toLocaleString();
+    if(raw[0])$('metric-years').textContent=raw[0].d.slice(0,4)+'-'+raw[raw.length-1].d.slice(0,4);
     renderAll();
-  }catch(e){$('error').textContent=e.message;$('error').classList.remove('hidden')}
+  }catch(e){$('error')&&($('error').textContent=e.message)};
 }
 
 function renderAll(){
   Object.values(CH).forEach(c=>{try{c.destroy()}catch(e){}});
   if(!raw.length)return;
-  ['anomaly','calendar','monthly','records','scatter'].forEach(v=>{try{W['render'+v[0].toUpperCase()+v.slice(1)]()}catch(e){}});
-  renderTable();renderCompare();
+  renderTable();renderAnomaly();renderCalendar();renderMonthly();renderRecords();
+}
+
+function updateSlider(){
+  const s=parseInt($('yr-s').value),e=parseInt($('yr-e').value);
+  if(s>e){$('yr-s').value=e;$('yr-e').value=s;}
+  $('yl').textContent=$('yr-s').value;$('yr').textContent=$('yr-e').value;
+  $('yr-range').textContent=$('yr-s').value+'-'+$('yr-e').value;
+}
+
+function renderTable(){
+  if(!raw.length){$('tbl').innerHTML='<div class="text-center py-16 text-white/30 text-sm">No data</div>';$('pp').disabled=true;$('np').disabled=true;$('pi').textContent='0';return}
+  const tp=Math.ceil(raw.length/PAGE),s=pg*PAGE,e=Math.min(s+PAGE,raw.length),p=raw.slice(s,e);
+  $('pp').disabled=pg<=0;$('np').disabled=pg>=tp-1;$('pi').textContent=`${pg+1}/${tp}`;
+  $('tbl').innerHTML=`<table><thead><tr><th>Date</th><th style="text-align:right">Max</th><th style="text-align:right">Min</th></tr></thead><tbody>${p.map(d=>`<tr><td>${d.d}</td><td style="text-align:right;color:${d.tmax!=null?'#fb923c':'#333'}">${d.tmax!=null?d.tmax.toFixed(1)+'\u00b0':'-'}</td><td style="text-align:right;color:${d.tmin!=null?'#67e8f9':'#333'}">${d.tmin!=null?d.tmin.toFixed(1)+'\u00b0':'-'}</td></tr>`).join('')}</tbody></table><div style="text-align:center;color:#64748b;padding:12px;font-family:monospace;font-size:12px">${s+1}\u2013${e} of ${raw.length.toLocaleString()}</div>`;
 }
 
 function renderAnomaly(){
@@ -316,42 +353,17 @@ function renderAnomaly(){
   const bv=bs.length?bs.reduce((s,y)=>s+annual[ys.indexOf(y)],0)/bs.length:annual.reduce((a,b)=>a+b,0)/annual.length;
   const anom=annual.map(v=>v-bv),mx=Math.max(...anom.map(Math.abs))||1;
   const colors=anom.map(v=>v>=0?`rgba(239,68,68,${Math.min(1,v/mx*1.5)})`:`rgba(59,130,246,${Math.min(1,Math.abs(v)/mx*1.5)})`);
-  CH.anomaly=new Chart($('chart-anomaly'),{type:'bar',data:{labels:ys,datasets:[{data:anom,backgroundColor:colors,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(6,6,14,0.95)',titleColor:'#e4e4e7',bodyColor:'#a1a1aa',padding:15,cornerRadius:12,displayColors:false,callbacks:{label:ctx=>`${ctx.parsed.y>0?'+':''}${ctx.parsed.y.toFixed(2)}\u00b0C`}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13},maxTicksLimit:20}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13},callback:v=>v+'\u00b0'}}}}});
-  const byYear={};
-  raw.forEach(d=>{const y=d.d.slice(0,4);if(d.tmax==null)return;byYear[y]=byYear[y]||[];byYear[y].push(d.tmax)});
-  const ys2=Object.keys(byYear).filter(y=>byYear[y].length>20).sort();
-  if(ys2.length<2)return;
-  const means=ys2.map(y=>byYear[y].reduce((a,b)=>a+b,0)/byYear[y].length);
-  const bl=means.reduce((a,b)=>a+b,0)/means.length,mx2=Math.max(...means.map(m=>Math.abs(m-bl)))||1;
-  $('s-start').textContent=ys2[0];$('s-end').textContent=ys2[ys2.length-1];
-  $('stripes').innerHTML=ys2.map(y=>{
-    const m=byYear[y].reduce((a,b)=>a+b,0)/byYear[y].length,d=(m-bl)/mx2,c=Math.max(-1,Math.min(1,d));
-    const r=c>0?Math.round(180*c+70):30,b=c<0?Math.round(180*Math.abs(c)+70):30,g=Math.round(40+40*(1-Math.abs(c)));
-    return `<div class="flex-1 hover:opacity-80 transition-opacity cursor-pointer" style="background:rgb(${r},${g},${b})" title="${y}: ${m.toFixed(1)}\u00b0C"></div>`;
-  }).join('');
+  CH.anomaly=new Chart($('chart-anomaly'),{type:'bar',data:{labels:ys,datasets:[{data:anom,backgroundColor:colors,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,0.95)',titleColor:'#e4e4e7',bodyColor:'#a1a1aa',padding:12,cornerRadius:8,displayColors:false,callbacks:{label:ctx=>`${ctx.parsed.y>0?'+':''}${ctx.parsed.y.toFixed(2)}\u00b0C`}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11},maxTicksLimit:20}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:11},callback:v=>v+'\u00b0'}}}}});
 }
 
 function renderCalendar(){
   const byMonth={};
   raw.forEach(d=>{if(d.tmax==null)return;const m=d.d.slice(0,7);byMonth[m]=byMonth[m]||[];byMonth[m].push(d.tmax)});
-  const allMonths=Object.keys(byMonth).sort();
-  const totalPg=Math.ceil(allMonths.length/calMonths);
-  if(calPg>=totalPg)calPg=totalPg-1;if(calPg<0)calPg=0;
-  const months=allMonths.slice(calPg*calMonths,(calPg+1)*calMonths);
-  const data=months.map(m=>byMonth[m].reduce((a,b)=>a+b,0)/byMonth[m].length);
-  const labels=months.map(m=>{const d=new Date(m+'-01');return d.toLocaleString('default',{month:'short'})+" '"+m.slice(2,4)});
+  const allMonths=Object.keys(byMonth).sort().slice(-36);
+  const data=allMonths.map(m=>byMonth[m].reduce((a,b)=>a+b,0)/byMonth[m].length);
+  const labels=allMonths.map(m=>{const d=new Date(m+'-01');return d.toLocaleString('default',{month:'short'})+" '"+m.slice(2,4)});
   const cmax=Math.max(...data),cmin=Math.min(...data);
-  if(CH.cal)CH.cal.destroy();
-  CH.cal=new Chart($('chart-cal'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>{const t=(v-cmin)/(cmax-cmin||1);return`rgb(${Math.round(26+t*170)},${Math.round(109+t*(-109+150))},${Math.round(93+t*(-93+60))})`}),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:12},maxTicksLimit:60,autoSkip:true,maxRotation:90}},y:{display:false,grid:{display:false}}}}});
-  $('cal-i').textContent=`${totalPg>0?calPg+1:0}/${totalPg}`;
-  $('cal-p').disabled=calPg<=0;$('cal-n').disabled=calPg>=totalPg-1;
-  $('cal-range').textContent=months.length?`${months[0]} \u2014 ${months[months.length-1]}`:'No data';
-  const md={};
-  raw.forEach(d=>{if(d.tmax==null)return;const m=parseInt(d.d.slice(5,7)),y=d.d.slice(0,4);md[y]=md[y]||{};md[y][m]=md[y][m]||[];md[y][m].push(d.tmax)});
-  const yrs=Object.keys(md).sort(),sd=yrs.flatMap(y=>Array.from({length:12},(_,i)=>{const av=md[y]?.[i+1];return av?av.reduce((a,b)=>a+b,0)/av.length:null})).filter(v=>v!=null);
-  const rmx=Math.max(...sd),rmn=Math.min(...sd);
-  if(CH.spiral)CH.spiral.destroy();
-  CH.spiral=new Chart($('chart-spiral'),{type:'polarArea',data:{labels:yrs.flatMap(y=>Array.from({length:12},(_,i)=>`${y}-${String(i+1).padStart(2,'0')}`)),datasets:[{data:yrs.flatMap(y=>Array.from({length:12},(_,i)=>{const av=md[y]?.[i+1];const v=av?av.reduce((a,b)=>a+b,0)/av.length:null;return v?v-rmn+1:null})).filter(v=>v!=null),backgroundColor:sd.map(v=>{const t=(v-rmn)/(rmx-rmn||1);return`rgba(${Math.round(59+t*180)},${Math.round(130-t*60)},${Math.round(246-t*180)},0.7)`}),borderWidth:0.1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{display:false,grid:{display:false}}}}});
+  CH.cal=new Chart($('chart-cal'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>{const t=(v-cmin)/(cmax-cmin||1);return`rgb(${Math.round(26+t*170)},${Math.round(109+t*(-109+150))},${Math.round(93+t*(-93+60))})`}),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10},maxTicksLimit:36}},y:{display:false,grid:{display:false}}}}});
 }
 
 function renderMonthly(){
@@ -361,11 +373,7 @@ function renderMonthly(){
   const means=mnths.map((_,i)=>{const v=Object.values(byMonth[i+1]?.years||{}).flatMap(v=>v.reduce((a,b)=>a+b,0)/v.length);return v.reduce((a,b)=>a+b,0)/v.length});
   const maxes=mnths.map((_,i)=>{const v=Object.entries(byMonth[i+1]?.years||{}).map(([y,v])=>({y,avg:v.reduce((a,b)=>a+b,0)/v.length}));return Math.max(...v.map(a=>a.avg))});
   const mins=mnths.map((_,i)=>{const v=Object.entries(byMonth[i+1]?.years||{}).map(([y,v])=>({y,avg:v.reduce((a,b)=>a+b,0)/v.length}));return Math.min(...v.map(a=>a.avg))});
-  CH.monthly=new Chart($('chart-monthly'),{type:'line',data:{labels:mnths,datasets:[{label:'Avg',data:means,borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.08)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#f97316'},{label:'Max',data:maxes,borderColor:'#ef4444',borderDash:[4,3],pointRadius:0,tension:0.4},{label:'Min',data:mins,borderColor:'#3b82f6',borderDash:[4,3],pointRadius:0,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:14},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:13}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:13}}}}}});
-  ['jan','jul'].forEach((m,mi)=>{const month=mi===0?1:7;
-    const years=Object.entries(byMonth[month]?.years||{}).map(([y,vals])=>({y,avg:vals.reduce((a,b)=>a+b,0)/vals.length})).sort((a,b)=>a.y-b.y);
-    const ll=years.map(y=>y.avg),trend=ll.map((_,i,a)=>a.slice(Math.max(0,i-10),i+1).reduce((s,v)=>s+v,0)/Math.min(11,i+1));
-    CH[`month-${m}`]=new Chart($(`chart-month-${m}`),{type:'line',data:{labels:years.map(y=>y.y),datasets:[{label:'Annual',data:ll,borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,0.06)',fill:true,pointRadius:1,tension:0.2},{label:'10yr avg',data:trend,borderColor:'#f97316',borderWidth:3,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:12},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}})});
+  CH.monthly=new Chart($('chart-monthly'),{type:'line',data:{labels:mnths,datasets:[{label:'Avg',data:means,borderColor:'#67e8f9',backgroundColor:'rgba(103,232,249,0.06)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#67e8f9'},{label:'Max',data:maxes,borderColor:'#fb923c',borderDash:[4,3],pointRadius:0,tension:0.4},{label:'Min',data:mins,borderColor:'#38bdf8',borderDash:[4,3],pointRadius:0,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:11},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:11}}}}}});
 }
 
 function renderRecords(){
@@ -374,99 +382,42 @@ function renderRecords(){
   const decades={};
   Object.entries(byYear).forEach(([y,vals])=>{const d=Math.floor(parseInt(y)/10)*10;decades[d]=decades[d]||{years:{}};decades[d].years[y]=vals});
   const dk=Object.keys(decades).sort(),dl=dk.map(d=>`${d}s`);
-  CH.recH=new Chart($('chart-rec-high'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.max(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(239,68,68,0.6)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}});
-  CH.recL=new Chart($('chart-rec-low'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(59,130,246,0.6)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}});
-  CH.recR=new Chart($('chart-rec-range'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map((dk,i)=>Math.max(...Object.values(decades[dk].years).flat())-Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(168,85,247,0.6)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}});
+  CH.recH=new Chart($('chart-rec-high'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.max(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(239,68,68,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
+  CH.recL=new Chart($('chart-rec-low'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(59,130,246,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
+  CH.recR=new Chart($('chart-rec-range'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map((dk,i)=>Math.max(...Object.values(decades[dk].years).flat())-Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(168,85,247,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
   const hotDays={};
   Object.entries(byYear).forEach(([y,vals])=>{hotDays[y]=vals.filter(v=>v>35).length});
   const hd=Object.entries(hotDays).sort((a,b)=>a[0]-b[0]);
-  CH.hotD=new Chart($('chart-rec-hotdays'),{type:'line',data:{labels:hd.map(h=>h[0]),datasets:[{data:hd.map(h=>h[1]),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.06)',fill:true,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:11},maxTicksLimit:15}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}});
+  CH.hotD=new Chart($('chart-rec-hotdays'),{type:'line',data:{labels:hd.map(h=>h[0]),datasets:[{data:hd.map(h=>h[1]),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.06)',fill:true,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10},maxTicksLimit:15}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
 }
 
-function renderScatter(){
-  const pts=raw.filter(d=>d.tmax!=null&&d.tmin!=null).map(d=>({x:d.tmin,y:d.tmax}));
-  CH.scatter=new Chart($('chart-scatter'),{type:'scatter',data:{datasets:[{data:pts,backgroundColor:'rgba(59,130,246,0.12)',pointRadius:3,borderColor:'rgba(59,130,246,0.3)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Min Temp (\u00b0C)',color:'#71717a',font:{size:13}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}},y:{title:{display:true,text:'Max Temp (\u00b0C)',color:'#71717a',font:{size:13}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}});
-  const bins={};raw.forEach(d=>{if(d.tmax==null)return;const b=Math.floor(d.tmax/2)*2;bins[b]=bins[b]||[];bins[b].push(d.tmax)});
-  const bl=Object.keys(bins).sort((a,b)=>a-b);
-  CH.dist=new Chart($('chart-dist'),{type:'bar',data:{labels:bl.map(b=>b+'\u00b0'),datasets:[{data:bl.map(b=>bins[b].length),backgroundColor:'rgba(139,92,246,0.4)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}});
-}
-
-async function renderCompare(){
-  const sel=$('compare-stns');sel.innerHTML='';
-  const sts=await(await fetch('/api/stations')).json();
-  if(sts.error)return;
-  const act=['066214','086338','009021'];
-  sts.forEach(s=>{
-    const btn=document.createElement('button');
-    btn.className=`px-4 py-2 rounded-2xl text-base font-medium border transition-all ${act.includes(s.id)?'border-blue-500/30 text-blue-400':'border-white/10 text-zinc-500'}`;
-    btn.textContent=s.name.split('(')[0].trim();
-    if(act.includes(s.id))btn.style.background='rgba(59,130,246,0.1)';
-    btn.onclick=async()=>{
-      btn.classList.toggle('border-blue-500/30');btn.classList.toggle('text-blue-400');
-      if(!btn.style.background||btn.style.background==='none')btn.style.background='rgba(59,130,246,0.1)';else btn.style.background='none';
-      await renderCompareChart();
-    };
-    sel.appendChild(btn);
-  });
-  await renderCompareChart();
-}
-
-async function renderCompareChart(){
-  const btns=document.querySelectorAll('#compare-stns button');
-  const active=[];btns.forEach((b,i)=>{if(b.style.background&&b.style.background!=='none')active.push(i)});
-  const sts=await(await fetch('/api/stations')).json();
-  if(sts.error)return;
-  const colors=['#f97316','#22d3ee','#818cf8','#34d399','#f472b6','#fbbf24','#a78bfa','#fb923c'];
-  const datasets=[];
-  for(let idx of active){
-    const s=sts[idx];if(!s)continue;
-    try{
-      const r=await(await fetch(`/api/anomaly/${s.id}?source=bom_acorn`)).json();
-      if(r.years){
-        const anomalyData=r.years.filter(y=>y.anomaly_tmax!=null).map(y=>({x:y.year,y:y.anomaly_tmax}));
-        datasets.push({label:s.name.split('(')[0].trim(),data:anomalyData,borderColor:colors[datasets.length%colors.length],backgroundColor:colors[datasets.length%colors.length]+'11',fill:true,pointRadius:0,tension:0.3});
-      }
-    }catch(e){}
-  }
-  if(CH.compare)CH.compare.destroy();
-  CH.compare=new Chart($('chart-compare'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:14},usePointStyle:true}}},scales:{x:{type:'category',grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}},y:{title:{display:true,text:'Anomaly (\u00b0C)',color:'#71717a',font:{size:13}},grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#52525b',font:{size:11}}}}}});
-}
-
-function renderTable(){
-  if(!raw.length){$('tbl').innerHTML='<div class="text-center py-20 text-zinc-600 text-base">No data</div>';$('pp').disabled=true;$('np').disabled=true;$('pi').textContent='0';return}
-  const tp=Math.ceil(raw.length/PAGE),s=pg*PAGE,e=Math.min(s+PAGE,raw.length),p=raw.slice(s,e);
-  $('pp').disabled=pg<=0;$('np').disabled=pg>=tp-1;$('pi').textContent=`${pg+1}/${tp}`;
-  $('tbl').innerHTML=`<table class="w-full text-base"><thead><tr class="text-zinc-500 border-b border-white/5"><th class="text-left py-4 px-6 font-medium">Date</th><th class="text-right py-4 px-6 font-medium">Max</th><th class="text-right py-4 px-6 font-medium">Min</th></tr></thead><tbody>${p.map(d=>`<tr class="border-b border-white/5 hover:bg-white/[0.01]"><td class="py-3 px-6 text-zinc-300 font-mono">${d.d}</td><td class="py-3 px-6 text-right font-mono ${d.tmax!=null?'text-orange-400':'text-zinc-700'}">${d.tmax!=null?d.tmax.toFixed(1)+'\u00b0':'-'}</td><td class="py-3 px-6 text-right font-mono ${d.tmin!=null?'text-blue-400':'text-zinc-700'}">${d.tmin!=null?d.tmin.toFixed(1)+'\u00b0':'-'}</td></tr>`).join('')}</tbody></table><div class="text-center text-zinc-600 py-5 font-mono">${s+1}\u2013${e} of ${raw.length.toLocaleString()}</div>`;
-}
-
-function updateSlider(){
-  const min=1910,max=2024;
-  let s=parseInt($('yr-s').value),e=parseInt($('yr-e').value);
-  if(s>e){const t=s;s=e;e=t;$('yr-s').value=s;$('yr-e').value=e;}
-  const sp=((s-min)/(max-min)*100),ep=((e-min)/(max-min)*100);
-  $('yr-track').style.left=sp+'%';$('yr-track').style.right=(100-ep)+'%';
-  $('yr-range-label').textContent=s+' \u2014 '+e;
-  $('yr-s-sel').value=s;$('yr-e-sel').value=e;
-}
-['yr-s','yr-e'].forEach(id=>{$(id).addEventListener('input',updateSlider)});
-['yr-s-sel','yr-e-sel'].forEach(id=>{$(id).addEventListener('change',function(){const v=parseInt(this.value);if(this.id==='yr-s-sel'){$('yr-s').value=v}else{$('yr-e').value=v}updateSlider()})});
 $('load-btn').addEventListener('click',()=>{const sid=$('stn').value;if(sid)selectStation(sid)});
-['cal-p','cal-n'].forEach(id=>{$(id).addEventListener('click',()=>{calPg+=id==='cal-n'?1:-1;calPg=Math.max(0,Math.min(calPg,999));if(raw.length)renderCalendar()})});
 $('pp').addEventListener('click',()=>{if(pg>0){pg--;renderTable()}});
 $('np').addEventListener('click',()=>{if((pg+1)*PAGE<raw.length){pg++;renderTable()}});
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
-  document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('tab-active');x.classList.add('text-zinc-500')});
-  this.classList.add('tab-active');this.classList.remove('text-zinc-500');
-  document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-  $(`v-${this.dataset.tab}`).classList.remove('hidden');
-  setTimeout(()=>renderAll(),200);
+  document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('tab-active')});
+  this.classList.add('tab-active');
+  document.querySelectorAll('#views>div').forEach(v=>v.classList.add('hidden'));
+  const target=document.getElementById('v-'+this.dataset.view);
+  if(target)target.classList.remove('hidden');
+  setTimeout(()=>renderAll(),100);
 }));
+document.querySelectorAll('.nav-item').forEach((item,idx)=>{
+  item.addEventListener('click',function(){
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    const views=['table','table','calendar','monthly','records','scatter','compare'];
+    const t=document.querySelector(`.tab[data-view="${views[idx]}"]`);
+    if(t)t.click();
+  });
+});
 
 async function checkHealth(){
   try{
     const h=await(await fetch('/api/health')).json();
     if(h.database?.connected){
-      $('status-dot').className='w-2 h-2 rounded-full bg-emerald-500';$('status-text').textContent='Connected';
+      $('status-dot').className='w-1.5 h-1.5 rounded-full bg-emerald-500';$('status-text').textContent='Connected';
+      $('db-status').textContent='All systems nominal';
       const c=await(await fetch('/api/counts')).json();
       $('rec-count').textContent=Object.values(c).reduce((a,b)=>a+b,0).toLocaleString()+' records';
     }
@@ -474,9 +425,7 @@ async function checkHealth(){
 }
 
 async function init(){
-  const yrs=Array.from({length:115},(_,i)=>{const y=1910+i;return `<option value="${y}">${y}</option>`}).join('');
-  $('yr-s-sel').innerHTML=yrs;$('yr-e-sel').innerHTML=yrs;
-  $('yr-s').value=2014;$('yr-e').value=2024;$('yr-s-sel').value=2014;$('yr-e-sel').value=2024;updateSlider();
+  $('yr-s').value=2014;$('yr-e').value=2024;updateSlider();
   checkHealth();
   try{
     stns=await(await fetch('/api/stations')).json();
@@ -484,7 +433,7 @@ async function init(){
     const sel=$('stn');sel.innerHTML=stns.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
     const gs=stns.find(s=>DATA_STNS.includes(s.id));if(gs)sel.value=gs.id;
     drawMap();
-  }catch(e){$('error').textContent=e.message;$('error').classList.remove('hidden')}
+  }catch(e){$('error')&&($('error').textContent=e.message)}
 }
 init();
 </script>
