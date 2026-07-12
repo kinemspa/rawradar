@@ -156,104 +156,116 @@ HOME = r"""<!DOCTYPE html>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#e4e4e7;overflow-x:hidden}
-.text-xs{font-size:1rem!important}
-.text-sm{font-size:1.05rem!important}
-.text-base{font-size:1.2rem!important}
-.text-lg{font-size:1.4rem!important}
-.tab{font-size:1.1rem!important;padding:0.75rem 1.5rem!important}
-input,select,button{font-size:1rem!important}
-.glass{background:rgba(18,18,30,0.7);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.05)}
-.tab-active{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.1));border-color:rgba(59,130,246,0.3);color:#93c5fd!important}
-.pin{animation:pulse 2s ease-in-out infinite;cursor:pointer;transition:r 0.2s}.pin:hover{r:7;filter:brightness(1.3)}
-input[type=range]{-webkit-appearance:none;appearance:none;height:6px;background:transparent;outline:none;position:absolute;width:100%;top:8px;pointer-events:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#3b82f6;border:3px solid rgba(255,255,255,0.3);cursor:pointer;box-shadow:0 0 16px rgba(59,130,246,0.5);pointer-events:all;position:relative;z-index:30}
-input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#3b82f6;border:3px solid rgba(255,255,255,0.3);cursor:pointer;pointer-events:all}
+body{font-family:'Inter',system-ui,sans-serif;background:#06060e;color:#d4d4d8;overflow-x:hidden;font-size:20px;line-height:1.6}
+.glass{background:rgba(18,18,30,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.05)}
+.tab{padding:12px 28px;border-radius:16px;font-size:18px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#71717a;transition:all 0.2s}
+.tab:hover{background:rgba(255,255,255,0.04)}
+.tab-active{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.1));border-color:rgba(59,130,246,0.3);color:#93c5fd}
+select,input,button{font-size:18px;padding:14px 20px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;outline:none}
+select:focus,input:focus{border-color:rgba(59,130,246,0.5)}
+.pin{animation:pulse 2s ease-in-out infinite;cursor:pointer}
+.pin:hover{filter:brightness(1.3)}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;background:transparent;outline:none;position:absolute;width:100%;top:6px;pointer-events:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#3b82f6;border:3px solid rgba(255,255,255,0.3);cursor:pointer;box-shadow:0 0 16px rgba(59,130,246,0.5);pointer-events:all;position:relative;z-index:30}
+.stn-label{font-size:13px;fill:#a1a1aa;pointer-events:none}
+.city-label{fill:rgba(255,255,255,0.1);font-size:14px;text-anchor:middle}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th{text-align:left;padding:14px 20px;font-weight:500;color:#71717a;border-bottom:1px solid rgba(255,255,255,0.05)}
+td{padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.03);font-family:monospace}
+tr:hover{background:rgba(255,255,255,0.01)}
 </style>
 </head>
 <body>
-<div class="min-h-screen flex flex-col">
-<header class="glass border-b border-white/5 px-6 lg:px-12 py-5 flex items-center justify-between sticky top-0 z-50" style="background:rgba(6,6,14,0.85)">
-<a href="/" class="flex items-center gap-4 group"><div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl group-hover:scale-105 transition-transform" style="box-shadow:0 0 30px rgba(59,130,246,0.2)">RR</div><div><h1 class="text-3xl font-bold tracking-tight text-white">RawRadar</h1><p class="text-sm text-zinc-500 -mt-0.5 tracking-wider uppercase font-medium">Australian Climate Data</p></div></a>
-<div class="flex items-center gap-6"><span class="text-zinc-500" id="rec-count"></span><button id="status-btn" class="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm border border-zinc-700" style="background:rgba(24,24,27,0.5)"><span class="w-2 h-2 rounded-full bg-zinc-600" id="status-dot"></span><span id="status-text" class="text-zinc-400">DB</span></button></div>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+<header style="background:rgba(6,6,14,0.85);border-bottom:1px solid rgba(255,255,255,0.03);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(24px)">
+<a href="/" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit">
+<div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3b82f6,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;color:white;box-shadow:0 0 30px rgba(59,130,246,0.2);transition:transform 0.2s">RR</div>
+<div><h1 style="font-size:30px;font-weight:bold;color:white">RawRadar</h1><p style="font-size:15px;color:#71717a;margin-top:-2px;text-transform:uppercase;letter-spacing:0.05em">Australian Climate Data</p></div>
+</a>
+<div style="display:flex;align-items:center;gap:24px"><span style="color:#71717a;font-size:16px" id="rec-count"></span><button id="status-btn" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px"><span id="status-dot" style="width:8px;height:8px;border-radius:50%;background:#52525b;display:inline-block"></span><span id="status-text">DB</span></button></div>
 </header>
 
-<div class="flex-1 p-6 lg:p-12 w-full max-w-full">
-<div id="error" class="hidden bg-red-900/50 border border-red-500/30 rounded-3xl p-6 mb-6 text-base text-red-300"></div>
+<main style="flex:1;padding:30px 40px;width:100%;max-width:100%">
+<div id="error" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:24px;padding:20px;margin-bottom:24px;font-size:16px;color:#fca5a5"></div>
 
-<div id="map-section" class="glass rounded-3xl p-6 lg:p-10 mb-8 w-full" style="background:linear-gradient(135deg,rgba(6,6,20,0.95),rgba(10,10,30,0.95))">
-<div class="flex items-center justify-between mb-4"><div><h2 class="text-xl font-semibold text-zinc-100">Explore Stations</h2><p class="text-sm text-zinc-500 mt-1">Click a marker to view climate data</p></div>
-<div class="flex items-center gap-3 text-sm text-zinc-500"><span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-orange-500"></span> Has data</span><span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-zinc-600"></span> Limited</span></div></div>
-<div id="map-container" class="relative w-full" style="height:min(50vh,500px)"><svg id="map-svg" class="w-full h-full" viewBox="0 0 820 680" preserveAspectRatio="xMidYMid meet"></svg><div id="map-loading" class="absolute inset-0 flex items-center justify-center text-zinc-500 text-base">Loading stations...</div></div>
+<div style="border-radius:24px;padding:24px 32px;margin-bottom:32px;background:linear-gradient(135deg,rgba(6,6,20,0.95),rgba(10,10,30,0.95));border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px)">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+<div><h2 style="font-size:24px;font-weight:600;color:#e4e4e7">Explore Stations</h2><p style="font-size:16px;color:#71717a;margin-top:4px">Click a marker to view climate data</p></div>
+<div style="display:flex;align-items:center;gap:12px;font-size:16px;color:#71717a"><span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:#f97316;display:inline-block"></span> Has data</span><span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:#52525b;display:inline-block"></span> Limited</span></div>
+</div>
+<div id="map-container" style="width:100%;height:min(45vh,460px);position:relative"><svg id="map-svg" style="width:100%;height:100%" viewBox="0 0 820 680" preserveAspectRatio="xMidYMid meet"></svg><div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#71717a;font-size:16px">Loading stations...</div></div>
 </div>
 
-<div class="glass rounded-3xl p-6 lg:p-8 mb-8">
-<div class="flex flex-wrap items-end gap-4">
-<div class="flex-1 min-w-[250px]"><label class="text-sm text-zinc-500 mb-2 block">Station</label>
-<select id="stn" class="w-full bg-zinc-800/50 text-zinc-200 px-5 py-4 rounded-2xl border border-white/5"></select></div>
-<div class="flex-1 min-w-[350px]"><label class="text-sm text-zinc-500 mb-2 block">Year Range</label>
-<div class="flex items-center gap-4">
-<select id="yr-s-sel" class="bg-zinc-800/50 text-zinc-200 px-4 py-4 rounded-2xl border border-white/5 w-28 text-center"></select>
-<div class="flex-1 relative pt-5 pb-3">
-<div class="flex justify-between text-sm text-zinc-600 mb-2"><span>1910</span><span id="yr-range-label" class="text-zinc-300 font-semibold">2014 &mdash; 2024</span><span>2024</span></div>
-<div class="relative h-8">
-<div class="absolute top-3 left-0 right-0 h-1.5 bg-zinc-800 rounded-full"></div>
-<div id="yr-track" class="absolute top-3 h-1.5 rounded-full" style="left:0%;right:0%;background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>
-<input type="range" id="yr-s" class="absolute w-full cursor-pointer z-20" min="1910" max="2024" value="2014" style="top:0;left:0;height:32px;-webkit-appearance:none;background:transparent">
-<input type="range" id="yr-e" class="absolute w-full cursor-pointer z-20" min="1910" max="2024" value="2024" style="top:0;left:0;height:32px;-webkit-appearance:none;background:transparent">
+<div style="border-radius:24px;padding:24px 32px;margin-bottom:32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)">
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px">
+<div style="flex:1;min-width:280px"><label style="font-size:16px;color:#71717a;display:block;margin-bottom:8px">Station</label><select id="stn" style="width:100%;padding:16px 20px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;font-size:18px;outline:none"></select></div>
+<div style="flex:2;min-width:400px"><label style="font-size:16px;color:#71717a;display:block;margin-bottom:8px">Year Range</label>
+<div style="display:flex;align-items:center;gap:16px">
+<select id="yr-s-sel" style="padding:16px 12px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;font-size:18px;width:90px;text-align:center;outline:none"></select>
+<div style="flex:1;position:relative;padding-top:16px;padding-bottom:8px">
+<div style="display:flex;justify-content:space-between;font-size:16px;color:#52525b;margin-bottom:8px"><span>1910</span><span id="yr-range-label" style="color:#a1a1aa;font-weight:600">2014 &mdash; 2024</span><span>2024</span></div>
+<div style="position:relative;height:32px">
+<div style="position:absolute;top:12px;left:0;right:0;height:6px;background:#27272a;border-radius:3px"></div>
+<div id="yr-track" style="position:absolute;top:12px;height:6px;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#6366f1);left:0%;right:0%"></div>
+<input type="range" id="yr-s" min="1910" max="2024" value="2014" style="position:absolute;width:100%;top:0;left:0;height:32px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;z-index:20">
+<input type="range" id="yr-e" min="1910" max="2024" value="2024" style="position:absolute;width:100%;top:0;left:0;height:32px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;z-index:20">
 </div></div>
-<select id="yr-e-sel" class="bg-zinc-800/50 text-zinc-200 px-4 py-4 rounded-2xl border border-white/5 w-28 text-center"></select>
+<select id="yr-e-sel" style="padding:16px 12px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#d4d4d8;font-size:18px;width:90px;text-align:center;outline:none"></select>
 </div></div>
-<button id="load-btn" class="px-8 py-4 rounded-2xl text-base font-semibold text-white border-0 cursor-pointer" style="background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 0 30px rgba(59,130,246,0.25)">Load</button>
-<a id="dl-btn" class="px-6 py-4 rounded-2xl text-base font-medium text-zinc-300 no-underline hidden cursor-pointer border border-white/10" style="background:rgba(24,24,27,0.4)">CSV</a>
+<button id="load-btn" style="padding:16px 36px;border-radius:16px;font-size:18px;font-weight:600;color:white;border:none;cursor:pointer;background:linear-gradient(135deg,#3b82f6,#6366f1);box-shadow:0 0 30px rgba(59,130,246,0.25)">Load</button>
+<a id="dl-btn" style="display:none;padding:16px 28px;border-radius:16px;font-size:18px;color:#a1a1aa;text-decoration:none;cursor:pointer;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.4)">CSV</a>
 </div></div>
 
-<div class="flex gap-2 mb-8 flex-wrap" id="tabs">
-<button class="tab tab-active px-5 py-3 rounded-2xl font-medium border border-white/10" data-tab="table">Data</button>
-<button class="tab px-5 py-3 rounded-2xl font-medium border border-white/10 text-zinc-500" data-tab="calendar">Calendar</button>
-<button class="tab px-5 py-3 rounded-2xl font-medium border border-white/10 text-zinc-500" data-tab="monthly">Monthly</button>
-<button class="tab px-5 py-3 rounded-2xl font-medium border border-white/10 text-zinc-500" data-tab="records">Records</button>
-<button class="tab px-5 py-3 rounded-2xl font-medium border border-white/10 text-zinc-500" data-tab="scatter">Scatter</button>
-<button class="tab px-5 py-3 rounded-2xl font-medium border border-white/10 text-zinc-500" data-tab="compare">Compare</button>
-<button class="tab px-5 py-3 rounded-2xl font-medium border border-white/10 text-zinc-500" data-tab="anomaly">Anomaly</button>
+<div id="tabs" style="display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap">
+<button class="tab tab-active" data-tab="table">Data</button>
+<button class="tab" data-tab="calendar">Calendar</button>
+<button class="tab" data-tab="monthly">Monthly</button>
+<button class="tab" data-tab="records">Records</button>
+<button class="tab" data-tab="scatter">Scatter</button>
+<button class="tab" data-tab="compare">Compare</button>
+<button class="tab" data-tab="anomaly">Anomaly</button>
 </div>
 
 <div id="views">
-<div class="view" id="v-table"><div class="glass rounded-3xl overflow-hidden">
-<div class="flex items-center justify-between px-8 py-6 border-b border-white/5"><div><h3 class="text-lg font-semibold text-zinc-100" id="tbl-title">Daily Readings</h3><p class="text-sm text-zinc-500 mt-1" id="tbl-sub">Select a station and click Load</p></div>
-<div class="flex items-center gap-4"><button id="pp" class="px-4 py-2 rounded-2xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 border border-white/10 text-base" disabled>&larr;</button><span id="pi" class="text-sm text-zinc-500 w-16 text-center font-mono">0</span><button id="np" class="px-4 py-2 rounded-2xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 border border-white/10 text-base" disabled>&rarr;</button></div></div>
-<div id="tbl" class="overflow-x-auto"><div class="text-center py-20 text-zinc-600 text-base">Click a station on the map or select from the dropdown</div></div>
+<div class="view" id="v-table">
+<div style="border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid rgba(255,255,255,0.05)">
+<div><h3 style="font-size:20px;font-weight:600;color:#e4e4e7" id="tbl-title">Daily Readings</h3><p style="font-size:16px;color:#71717a;margin-top:4px" id="tbl-sub">Select a station and click Load</p></div>
+<div style="display:flex;align-items:center;gap:16px"><button id="pp" style="padding:10px 18px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px" disabled>&larr;</button><span id="pi" style="font-size:16px;color:#71717a;width:60px;text-align:center;font-family:monospace">0</span><button id="np" style="padding:10px 18px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px" disabled>&rarr;</button></div></div>
+<div id="tbl" style="overflow-x:auto"><div style="text-align:center;padding:60px 20px;color:#52525b;font-size:16px">Click a station on the map or select from the dropdown</div></div>
 </div></div>
 
-<div class="view hidden" id="v-calendar"><div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-<div class="lg:col-span-3 glass rounded-3xl p-6 lg:p-8"><div class="flex items-center justify-between mb-3"><h2 class="text-lg font-semibold text-zinc-100">Calendar Heatmap</h2><div class="flex items-center gap-3"><button id="cal-p" class="px-3 py-1.5 rounded-xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 border border-white/10 text-base">&larr;</button><span id="cal-i" class="text-base text-zinc-500 w-16 text-center">1/1</span><button id="cal-n" class="px-3 py-1.5 rounded-xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 border border-white/10 text-base">&rarr;</button></div></div><p class="text-sm text-zinc-500 mb-4">Monthly average max temps &mdash; <span id="cal-range"></span></p><div style="min-height:280px"><canvas id="chart-cal"></canvas></div><div class="flex justify-center gap-4 mt-4 text-sm text-zinc-500"><span class="flex items-center gap-1"><span class="w-5 h-5 rounded" style="background:#1e3a5f"></span></span><span class="flex items-center gap-1"><span class="w-5 h-5 rounded" style="background:#2b6cb0"></span></span><span class="flex items-center gap-1"><span class="w-5 h-5 rounded" style="background:#63b3ed"></span></span><span class="flex items-center gap-1"><span class="w-5 h-5 rounded" style="background:#fbd38d"></span></span><span class="flex items-center gap-1"><span class="w-5 h-5 rounded" style="background:#ed8936"></span></span><span class="flex items-center gap-1"><span class="w-5 h-5 rounded" style="background:#c53030"></span><span class="ml-1">Hot</span></span></div></div>
-<div class="lg:col-span-2 glass rounded-3xl p-6 lg:p-8"><h2 class="text-lg font-semibold text-zinc-100 mb-4">Temperature Spiral</h2><p class="text-sm text-zinc-500 mb-4">Annual cycle &mdash; each ring is one year</p><div style="min-height:300px"><canvas id="chart-spiral"></canvas></div></div>
+<div class="view hidden" id="v-calendar"><div style="display:grid;grid-template-columns:1fr;gap:24px">
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7">Calendar Heatmap</h2><div style="display:flex;align-items:center;gap:12px"><button id="cal-p" style="padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px">&larr;</button><span id="cal-i" style="font-size:16px;color:#71717a;width:60px;text-align:center">1/1</span><button id="cal-n" style="padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(24,24,27,0.5);color:#71717a;cursor:pointer;font-size:16px">&rarr;</button></div></div><p style="font-size:16px;color:#71717a;margin-bottom:16px">Monthly average max temps &mdash; <span id="cal-range"></span></p><div style="min-height:280px"><canvas id="chart-cal"></canvas></div><div style="display:flex;justify-content:center;gap:16px;margin-top:16px;font-size:15px;color:#71717a"><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#1e3a5f"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#2b6cb0"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#63b3ed"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#fbd38d"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#ed8936"></span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:20px;display:inline-block;border-radius:4px;background:#c53030"></span><span style="margin-left:4px">Hot</span></span></div></div>
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:12px">Temperature Spiral</h2><p style="font-size:16px;color:#71717a;margin-bottom:16px">Annual cycle &mdash; each ring is one year</p><div style="min-height:300px"><canvas id="chart-spiral"></canvas></div></div>
 </div></div>
 
-<div class="view hidden" id="v-monthly"><div class="glass rounded-3xl p-6 lg:p-8 mb-6"><h2 class="text-lg font-semibold text-zinc-100 mb-4">Monthly Temperature Cycle</h2><div style="min-height:280px"><canvas id="chart-monthly"></canvas></div></div>
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-base font-semibold text-zinc-100 mb-4">January <span class="text-zinc-500">- summer trend</span></h3><div style="min-height:180px"><canvas id="chart-month-jan"></canvas></div></div><div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-base font-semibold text-zinc-100 mb-4">July <span class="text-zinc-500">- winter trend</span></h3><div style="min-height:180px"><canvas id="chart-month-jul"></canvas></div></div></div></div>
+<div class="view hidden" id="v-monthly">
+<div style="border-radius:24px;padding:24px 32px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Monthly Temperature Cycle</h2><div style="min-height:280px"><canvas id="chart-monthly"></canvas></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px"><div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:18px;font-weight:600;color:#e4e4e7;margin-bottom:16px">January <span style="color:#71717a">- summer trend</span></h3><div style="min-height:180px"><canvas id="chart-month-jan"></canvas></div></div>
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:18px;font-weight:600;color:#e4e4e7;margin-bottom:16px">July <span style="color:#71717a">- winter trend</span></h3><div style="min-height:180px"><canvas id="chart-month-jul"></canvas></div></div></div></div>
 
-<div class="view hidden" id="v-records"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-sm font-semibold text-zinc-100 mb-4 uppercase tracking-wider">Record Highs</h3><div style="min-height:200px"><canvas id="chart-rec-high"></canvas></div></div>
-<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-sm font-semibold text-zinc-100 mb-4 uppercase tracking-wider">Record Lows</h3><div style="min-height:200px"><canvas id="chart-rec-low"></canvas></div></div>
-<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-sm font-semibold text-zinc-100 mb-4 uppercase tracking-wider">Extreme Range</h3><div style="min-height:200px"><canvas id="chart-rec-range"></canvas></div></div>
-<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-sm font-semibold text-zinc-100 mb-4 uppercase tracking-wider">Days &gt;35&deg;C</h3><div style="min-height:200px"><canvas id="chart-rec-hotdays"></canvas></div></div>
+<div class="view hidden" id="v-records"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px">
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Record Highs</h3><div style="min-height:200px"><canvas id="chart-rec-high"></canvas></div></div>
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Record Lows</h3><div style="min-height:200px"><canvas id="chart-rec-low"></canvas></div></div>
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Extreme Range</h3><div style="min-height:200px"><canvas id="chart-rec-range"></canvas></div></div>
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:15px;font-weight:600;color:#e4e4e7;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em">Days &gt;35&deg;C</h3><div style="min-height:200px"><canvas id="chart-rec-hotdays"></canvas></div></div>
 </div></div>
 
-<div class="view hidden" id="v-scatter"><div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-lg font-semibold text-zinc-100 mb-4">Max vs Min Temp</h3><div style="min-height:280px"><canvas id="chart-scatter"></canvas></div></div>
-<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-lg font-semibold text-zinc-100 mb-4">Distribution</h3><div style="min-height:280px"><canvas id="chart-dist"></canvas></div></div>
+<div class="view hidden" id="v-scatter"><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Max vs Min Temp</h3><div style="min-height:280px"><canvas id="chart-scatter"></canvas></div></div>
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Distribution</h3><div style="min-height:280px"><canvas id="chart-dist"></canvas></div></div>
 </div></div>
 
-<div class="view hidden" id="v-compare"><div class="glass rounded-3xl p-6 lg:p-8"><h2 class="text-lg font-semibold text-zinc-100 mb-4">Station Comparison</h2><div class="flex gap-2 mb-4 flex-wrap" id="compare-stns"></div><div style="min-height:280px"><canvas id="chart-compare"></canvas></div></div></div>
+<div class="view hidden" id="v-compare"><div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h2 style="font-size:20px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Station Comparison</h2><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="compare-stns"></div><div style="min-height:280px"><canvas id="chart-compare"></canvas></div></div></div>
 
-<div class="view hidden" id="v-anomaly"><div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<div class="lg:col-span-2 glass rounded-3xl p-6 lg:p-8"><div class="flex justify-between mb-5"><div><h2 class="text-lg font-semibold text-zinc-100">Temperature Anomaly</h2><p class="text-sm text-zinc-500 mt-1">Annual deviation from 1961-1990 baseline</p></div><div class="flex items-center gap-2 text-sm"><span class="w-4 h-4 rounded-sm" style="background:rgba(239,68,68,0.7)"></span><span class="text-zinc-500">Warm</span><span class="w-4 h-4 rounded-sm ml-2" style="background:rgba(59,130,246,0.7)"></span><span class="text-zinc-500">Cool</span></div></div><div style="min-height:280px"><canvas id="chart-anomaly"></canvas></div></div>
-<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-base font-semibold text-zinc-100 mb-4">Climate Stripes</h3><div id="stripes" class="flex h-[260px] rounded-2xl overflow-hidden"></div><div class="flex justify-between text-sm text-zinc-500 mt-2"><span id="s-start"></span><span id="s-end"></span></div><div class="flex items-center gap-4 mt-3 text-sm text-zinc-500"><span class="flex items-center gap-1"><span class="w-4 h-4 rounded-sm" style="background:#1e3a5f"></span>Colder</span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded-sm" style="background:#8b1a1a"></span>Warmer</span></div></div>
+<div class="view hidden" id="v-anomaly"><div style="display:grid;grid-template-columns:2fr 1fr;gap:24px">
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:600;color:#e4e4e7">Temperature Anomaly</h2><p style="font-size:16px;color:#71717a;margin-top:4px">Annual deviation from 1961-1990 baseline</p></div><div style="display:flex;align-items:center;gap:8px;font-size:16px"><span style="width:16px;height:16px;display:inline-block;border-radius:4px;background:rgba(239,68,68,0.7)"></span><span style="color:#71717a">Warm</span><span style="width:16px;height:16px;display:inline-block;border-radius:4px;margin-left:8px;background:rgba(59,130,246,0.7)"></span><span style="color:#71717a">Cool</span></div></div><div style="min-height:280px"><canvas id="chart-anomaly"></canvas></div></div>
+<div style="border-radius:24px;padding:24px 32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)"><h3 style="font-size:18px;font-weight:600;color:#e4e4e7;margin-bottom:16px">Climate Stripes</h3><div id="stripes" style="display:flex;height:260px;border-radius:16px;overflow:hidden"></div><div style="display:flex;justify-content:space-between;font-size:16px;color:#71717a;margin-top:8px"><span id="s-start"></span><span id="s-end"></span></div><div style="display:flex;align-items:center;gap:16px;margin-top:12px;font-size:16px;color:#71717a"><span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:16px;display:inline-block;border-radius:4px;background:#1e3a5f"></span>Colder</span><span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:16px;display:inline-block;border-radius:4px;background:#8b1a1a"></span>Warmer</span></div></div>
 </div></div>
 </div></div>
 
-<footer class="glass border-t border-white/5 px-6 lg:px-12 py-5 text-sm text-zinc-600 flex items-center justify-between" style="background:rgba(6,6,14,0.85)"><span>RawRadar</span><span>Weather Data Transparency Project</span></footer>
+<footer style="border-top:1px solid rgba(255,255,255,0.03);padding:20px 40px;font-size:16px;color:#52525b;display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,14,0.85);backdrop-filter:blur(24px)"><span>RawRadar</span><span>Weather Data Transparency Project</span></footer>
 </div>
 
 <script>
@@ -270,8 +282,8 @@ function drawMap(){
   svg.appendChild(d);
   const bg=document.createElementNS(ns,'rect');bg.setAttribute('width','820');bg.setAttribute('height','680');bg.setAttribute('fill','url(#sg)');bg.setAttribute('rx','16');svg.appendChild(bg);
   [AUS,TAS].forEach((p,i)=>{const e=document.createElementNS(ns,'path');e.setAttribute('d',p);e.setAttribute('fill','rgba(20,30,50,0.5)');e.setAttribute('stroke','rgba(59,130,246,0.25)');e.setAttribute('stroke-width',i?'1':'2');svg.appendChild(e);});
-  stns.forEach(s=>{const pin=PINS[s.id];if(!pin)return;const has=DATA_STNS.includes(s.id);const g=document.createElementNS(ns,'g');const c=document.createElementNS(ns,'circle');c.setAttribute('cx',pin.x);c.setAttribute('cy',pin.y);c.setAttribute('r',has?'7':'5');c.setAttribute('fill',has?'#f97316':'#52525b');c.setAttribute('stroke','rgba(255,255,255,0.2)');c.setAttribute('stroke-width','2');c.setAttribute('filter','url(#gl)');c.setAttribute('class','pin');c.dataset.id=s.id;c.addEventListener('click',()=>selectStation(s.id));g.appendChild(c);const t=document.createElementNS(ns,'text');t.setAttribute('x',pin.x);t.setAttribute('y',pin.y-14);t.setAttribute('font-size','11');t.setAttribute('fill','#a1a1aa');t.setAttribute('text-anchor','middle');t.textContent=s.name.split('(')[0].trim();g.appendChild(t);svg.appendChild(g);});
-  [{n:'Sydney',x:755,y:515},{n:'Perth',x:78,y:478},{n:'Melbourne',x:635,y:588},{n:'Darwin',x:360,y:108},{n:'Brisbane',x:783,y:396},{n:'Adelaide',x:505,y:533},{n:'Hobart',x:680,y:682},{n:'Cairns',x:648,y:192}].forEach(c=>{const t=document.createElementNS(ns,'text');t.setAttribute('x',c.x);t.setAttribute('y',c.y);t.setAttribute('fill','rgba(255,255,255,0.1)');t.setAttribute('font-size','12');t.setAttribute('text-anchor','middle');t.textContent=c.n;svg.appendChild(t);});
+  stns.forEach(s=>{const pin=PINS[s.id];if(!pin)return;const has=DATA_STNS.includes(s.id);const g=document.createElementNS(ns,'g');const c=document.createElementNS(ns,'circle');c.setAttribute('cx',pin.x);c.setAttribute('cy',pin.y);c.setAttribute('r',has?'7':'5');c.setAttribute('fill',has?'#f97316':'#52525b');c.setAttribute('stroke','rgba(255,255,255,0.2)');c.setAttribute('stroke-width','2');c.setAttribute('filter','url(#gl)');c.setAttribute('class','pin');c.dataset.id=s.id;c.addEventListener('click',()=>selectStation(s.id));g.appendChild(c);const t=document.createElementNS(ns,'text');t.setAttribute('x',pin.x);t.setAttribute('y',pin.y-16);t.setAttribute('font-size','13');t.setAttribute('fill','#a1a1aa');t.setAttribute('text-anchor','middle');t.textContent=s.name.split('(')[0].trim();g.appendChild(t);svg.appendChild(g);});
+  [{n:'Sydney',x:755,y:516},{n:'Perth',x:78,y:478},{n:'Melbourne',x:635,y:588},{n:'Darwin',x:360,y:108},{n:'Brisbane',x:783,y:396},{n:'Adelaide',x:505,y:533},{n:'Hobart',x:680,y:682},{n:'Cairns',x:648,y:192}].forEach(c=>{const t=document.createElementNS(ns,'text');t.setAttribute('x',c.x);t.setAttribute('y',c.y);t.setAttribute('fill','rgba(255,255,255,0.1)');t.setAttribute('font-size','14');t.setAttribute('text-anchor','middle');t.textContent=c.n;svg.appendChild(t);});
   $('map-loading').classList.add('hidden');
 }
 
