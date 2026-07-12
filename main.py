@@ -193,7 +193,7 @@ tr:hover{background:rgba(255,255,255,0.01)}
 <div><h2 style="font-size:24px;font-weight:600;color:#e4e4e7">Explore Stations</h2><p style="font-size:16px;color:#71717a;margin-top:4px">Click a marker to view climate data</p></div>
 <div style="display:flex;align-items:center;gap:12px;font-size:16px;color:#71717a"><span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:#f97316;display:inline-block"></span> Has data</span><span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:#52525b;display:inline-block"></span> Limited</span></div>
 </div>
-<div id="map-container" style="width:100%;height:60vh;position:relative"><svg id="map-svg" style="width:100%;height:100%" viewBox="0 0 820 680" preserveAspectRatio="xMidYMid meet"></svg><div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#71717a;font-size:16px">Loading stations...</div></div>
+<div id="map-container" style="width:100%;height:min(75vh,550px);position:relative"><svg id="map-svg" style="width:100%;height:100%" viewBox="0 0 820 680" preserveAspectRatio="xMidYMid meet"></svg><div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#71717a;font-size:16px">Loading stations...</div></div>
 </div>
 
 <div style="border-radius:24px;padding:24px 32px;margin-bottom:32px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(24px);background:rgba(18,18,30,0.7)">
