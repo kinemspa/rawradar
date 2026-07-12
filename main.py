@@ -198,16 +198,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div></div>
 
 <div class="flex gap-1.5 mb-6 flex-wrap" id="tabs">
-<button class="tab tab-active px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5" data-tab="anomaly">Anomaly</button>
+<button class="tab tab-active px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5" data-tab="table">Data</button>
 <button class="tab px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5 text-zinc-500" data-tab="calendar">Calendar</button>
 <button class="tab px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5 text-zinc-500" data-tab="monthly">Monthly</button>
 <button class="tab px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5 text-zinc-500" data-tab="records">Records</button>
 <button class="tab px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5 text-zinc-500" data-tab="scatter">Scatter</button>
 <button class="tab px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5 text-zinc-500" data-tab="compare">Compare</button>
+<button class="tab px-5 py-2.5 rounded-2xl text-xs font-medium border border-white/5 text-zinc-500" data-tab="anomaly">Anomaly</button>
 </div>
 
 <div id="views">
-<div class="view" id="v-anomaly"><div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="view" id="v-table">
+<div class="glass rounded-3xl overflow-hidden">
+<div class="flex items-center justify-between px-6 lg:px-8 py-5 border-b border-white/5"><div><h3 class="text-sm font-semibold text-zinc-100" id="tbl-title">Daily Readings</h3><p class="text-xs text-zinc-600 mt-0.5" id="tbl-sub">Select a station and click Load</p></div>
+<div class="flex items-center gap-3"><button id="pp" class="px-3 py-1.5 rounded-xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 text-xs border border-white/5" disabled>&larr;</button><span id="pi" class="text-xs text-zinc-600 w-10 text-center font-mono">0</span><button id="np" class="px-3 py-1.5 rounded-xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 text-xs border border-white/5" disabled>&rarr;</button></div></div>
+<div id="tbl" class="overflow-x-auto"><div class="text-center py-16 text-zinc-700 text-sm">Click a station on the map or select from the dropdown</div></div>
+</div></div>
+
+<div class="view hidden" id="v-calendar"><div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 <div class="lg:col-span-2 glass rounded-3xl p-6 lg:p-8"><div class="flex justify-between mb-5"><div><h2 class="text-base font-semibold text-zinc-100" id="anomaly-title">Temperature Anomaly</h2><p class="text-xs text-zinc-600 mt-0.5">Annual deviation from 1961-1990 baseline</p></div><div class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-sm" style="background:rgba(239,68,68,0.7)"></span><span class="text-zinc-500 ml-1">Warm</span><span class="w-3 h-3 rounded-sm ml-2" style="background:rgba(59,130,246,0.7)"></span><span class="text-zinc-500 ml-1">Cool</span></div></div><div style="height:280px"><canvas id="chart-anomaly"></canvas></div></div>
 <div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-sm font-semibold text-zinc-100 mb-4">Climate Stripes</h3><div id="stripes" class="flex h-[240px] rounded-2xl overflow-hidden"></div><div class="flex justify-between text-xs text-zinc-600 mt-2"><span id="s-start"></span><span id="s-end"></span></div><div class="flex items-center gap-3 mt-3 text-xs text-zinc-500"><span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm" style="background:#1e3a5f"></span>Colder</span><span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm" style="background:#8b1a1a"></span>Warmer</span></div></div>
 </div></div>
@@ -233,13 +241,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div></div>
 
 <div class="view hidden" id="v-compare"><div class="glass rounded-3xl p-6 lg:p-8"><h2 class="text-base font-semibold text-zinc-100 mb-4">Station Comparison</h2><div class="flex gap-2 mb-4 flex-wrap" id="compare-stns"></div><div style="height:300px"><canvas id="chart-compare"></canvas></div></div></div>
-</div>
 
-<div class="mt-6 glass rounded-3xl overflow-hidden">
-<div class="flex items-center justify-between px-6 lg:px-8 py-5 border-b border-white/5"><div><h3 class="text-sm font-semibold text-zinc-100" id="tbl-title">Daily Readings</h3><p class="text-xs text-zinc-600 mt-0.5" id="tbl-sub"></p></div>
-<div class="flex items-center gap-3"><button id="pp" class="px-3 py-1.5 rounded-xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 text-xs border border-white/5" disabled>&larr;</button><span id="pi" class="text-xs text-zinc-600 w-10 text-center font-mono">0</span><button id="np" class="px-3 py-1.5 rounded-xl bg-zinc-800/50 text-zinc-400 disabled:opacity-30 text-xs border border-white/5" disabled>&rarr;</button></div></div>
-<div id="tbl" class="overflow-x-auto"><div class="text-center py-16 text-zinc-700 text-sm">Click a station on the map or select from the dropdown</div></div>
-</div>
+<div class="view hidden" id="v-anomaly"><div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 glass rounded-3xl p-6 lg:p-8"><div class="flex justify-between mb-5"><div><h2 class="text-base font-semibold text-zinc-100">Temperature Anomaly</h2><p class="text-xs text-zinc-600 mt-0.5">Annual deviation from 1961-1990 baseline</p></div><div class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-sm" style="background:rgba(239,68,68,0.7)"></span><span class="text-zinc-500 ml-1">Warm</span><span class="w-3 h-3 rounded-sm ml-2" style="background:rgba(59,130,246,0.7)"></span><span class="text-zinc-500 ml-1">Cool</span></div></div><div style="height:280px"><canvas id="chart-anomaly"></canvas></div></div>
+<div class="glass rounded-3xl p-6 lg:p-8"><h3 class="text-sm font-semibold text-zinc-100 mb-4">Climate Stripes</h3><div id="stripes" class="flex h-[240px] rounded-2xl overflow-hidden"></div><div class="flex justify-between text-xs text-zinc-600 mt-2"><span id="s-start"></span><span id="s-end"></span></div><div class="flex items-center gap-3 mt-3 text-xs text-zinc-500"><span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm" style="background:#1e3a5f"></span>Colder</span><span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm" style="background:#8b1a1a"></span>Warmer</span></div></div>
+</div></div>
+
 </div>
 <footer class="glass border-t border-white/[0.03] px-6 lg:px-10 py-4 text-xs text-zinc-700 flex items-center justify-between" style="background:rgba(6,6,14,0.8)"><span>RawRadar</span><span>Weather Data Transparency Project</span></footer>
 </div>
