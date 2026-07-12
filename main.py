@@ -421,7 +421,7 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function
   this.classList.add('tab-active');this.classList.remove('text-zinc-500');
   document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
   $(`v-${this.dataset.tab}`).classList.remove('hidden');
-  setTimeout(()=>renderAll(),50);
+  setTimeout(()=>renderAll(),200);
 }));
 
 ['yr-s','yr-e'].forEach(id=>{
