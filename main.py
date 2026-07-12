@@ -217,7 +217,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 
 <div class="view hidden" id="v-calendar"><div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-<div class="lg:col-span-3 glass rounded-3xl p-6 lg:p-8"><h2 class="text-base font-semibold text-zinc-100 mb-4">Calendar Heatmap</h2><div style="height:300px"><canvas id="chart-cal"></canvas></div><div class="flex justify-center gap-3 mt-4 text-xs text-zinc-500"><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#1e3a5f"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#2b6cb0"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#63b3ed"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#fbd38d"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#ed8936"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#c53030"></span><span class="ml-1">Hot</span></span></div></div>
+<div class="lg:col-span-3 glass rounded-3xl p-6 lg:p-8"><h2 class="text-base font-semibold text-zinc-100 mb-1">Calendar Heatmap</h2><p class="text-xs text-zinc-600 mb-4">Monthly average max temperatures — last 3 years</p><div style="height:300px"><canvas id="chart-cal"></canvas></div><div class="flex justify-center gap-3 mt-4 text-xs text-zinc-500"><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#1e3a5f"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#2b6cb0"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#63b3ed"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#fbd38d"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#ed8936"></span></span><span class="flex items-center gap-1"><span class="w-4 h-4 rounded" style="background:#c53030"></span><span class="ml-1">Hot</span></span></div></div>
 <div class="lg:col-span-2 glass rounded-3xl p-6 lg:p-8"><h2 class="text-base font-semibold text-zinc-100 mb-4">Temperature Spiral</h2><div style="height:350px"><canvas id="chart-spiral"></canvas></div></div>
 </div></div>
 
@@ -314,7 +314,8 @@ function renderAnomaly(){
 function renderCalendar(){
   const byMonth={};
   raw.forEach(d=>{if(d.tmax==null)return;const m=d.d.slice(0,7);byMonth[m]=byMonth[m]||[];byMonth[m].push(d.tmax)});
-  const months=Object.keys(byMonth).sort().slice(-36),labels=months,data=months.map(m=>byMonth[m].reduce((a,b)=>a+b,0)/byMonth[m].length);
+  const months=Object.keys(byMonth).sort().slice(-36),data=months.map(m=>byMonth[m].reduce((a,b)=>a+b,0)/byMonth[m].length);
+  const labels=months.map(m=>{const d=new Date(m+'-01');return d.toLocaleString('default',{month:'short'})+" '"+m.slice(2,4)});
   const cmax=Math.max(...data),cmin=Math.min(...data);
   CH.cal=new Chart($('chart-cal'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>{const t=(v-cmin)/(cmax-cmin||1);return`rgb(${Math.round(26+t*170)},${Math.round(109+t*(-109+150))},${Math.round(93+t*(-93+60))})`}),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#52525b',font:{size:9},maxTicksLimit:36}},y:{display:false,grid:{display:false}}}}});
   const md={};
