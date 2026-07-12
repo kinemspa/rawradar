@@ -35,9 +35,9 @@ def _query_rest(sql, params=None):
     order = "date.asc"
     m = re.search(r"ORDER BY (\w+)\s*(ASC|DESC)?", sql)
     if m: order = m.group(1) + (".desc" if m.group(2) == "DESC" else ".asc")
-    limit = 50000
+    limit = 100000
     m = re.search(r"LIMIT (\d+)", sql)
-    if m: limit = min(int(m.group(1)), 50000)
+    if m: limit = min(int(m.group(1)), 100000)
     if "SELECT 1" in sql: return [(1,)]
     if "MIN(date)" in sql:
         h = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
@@ -104,7 +104,7 @@ def api_years(station_id:str,source:str=None):
     except Exception as e: return JSONResponse(status_code=500,content={"error":str(e)})
 
 @app.get("/api/data/{station_id}")
-def api_data(station_id:str,source:str=None,from_date:str=Query(None,alias="from"),to_date:str=Query(None,alias="to"),limit:int=50000):
+def api_data(station_id:str,source:str=None,from_date:str=Query(None,alias="from"),to_date:str=Query(None,alias="to"),limit:int=100000):
     try:
         params=[station_id]; clauses=["station_id=%s"]
         if source: clauses.append("source=%s"); params.append(source)
@@ -136,7 +136,7 @@ def api_anomaly(station_id:str,source:str="bom_acorn"):
 @app.get("/api/export/{station_id}")
 def api_export(station_id:str,source:str=None,from_date:str=Query(None,alias="from"),to_date:str=Query(None,alias="to")):
     try:
-        data=api_data(station_id,source,from_date,to_date,50000)
+        data=api_data(station_id,source,from_date,to_date,100000)
         if isinstance(data,JSONResponse): return data
         lines=["date,tmax,tmin,source"]
         for r in data: lines.append(f"{r['d']},{r['tmax'] or ''},{r['tmin'] or ''},{r['src']}")
@@ -158,23 +158,17 @@ HOME = r"""<!DOCTYPE html>
 :root{--accent-cyan:#67e8f9}
 body{font-family:'Inter',system-ui,sans-serif;background:#020617;color:white;overflow-x:hidden}
 .font-display{font-family:'Space Grotesk','Inter',sans-serif;font-weight:600}
-.glass{background:rgba(15,23,42,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.glass{background:rgba(15,23,42,0.75);backdrop-filter:blur(16px)}
 .data-label{background:rgba(15,23,42,0.85);border:1px solid rgba(103,232,249,0.3);box-shadow:0 0 10px rgba(103,232,249,0.15)}
-.nav-item{transition:all 0.2s ease;cursor:pointer}
-.nav-item.active{background:rgba(103,232,249,0.1);color:#67e8f9;border-radius:0.5rem}
-.metric-row{transition:all 0.2s ease}
+.nav-item{transition:all 0.2s;cursor:pointer;border-radius:0.5rem;padding:12px 16px}
+.nav-item:hover{background:rgba(255,255,255,0.04)}
+.nav-item.active{background:rgba(103,232,249,0.1);color:#67e8f9}
+.metric-row{transition:all 0.2s;padding:4px 4px;border-radius:12px}
 .metric-row:hover{background:rgba(103,232,249,0.05);transform:translateX(2px)}
-.section-header{font-size:0.75rem;letter-spacing:1.5px;font-weight:600}
+.section-header{font-size:0.75rem;letter-spacing:1.5px;font-weight:600;color:rgba(255,255,255,0.7)}
 .stat-value{font-variant-numeric:tabular-nums}
-input[type=range]{-webkit-appearance:none;appearance:none;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;outline:none;width:100%;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#67e8f9;border:2px solid rgba(255,255,255,0.3);cursor:pointer;box-shadow:0 0 12px rgba(103,232,249,0.5)}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th{text-align:left;padding:12px 16px;font-weight:500;color:#64748b;border-bottom:1px solid rgba(255,255,255,0.05)}
-td{padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.03);font-family:monospace}
-tr:hover{background:rgba(255,255,255,0.02)}
-.tab{transition:all 0.2s;cursor:pointer;padding:8px 20px;border-radius:12px;font-size:13px;border:1px solid rgba(255,255,255,0.08);color:#64748b}
-.tab:hover{background:rgba(103,232,249,0.05)}
-.tab-active{background:rgba(103,232,249,0.1);border-color:rgba(103,232,249,0.3);color:#67e8f9}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;outline:none;width:100%;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#67e8f9;border:2px solid rgba(255,255,255,0.3);cursor:pointer;box-shadow:0 0 10px rgba(103,232,249,0.4)}
 .pin{animation:pulse 2s ease-in-out infinite;cursor:pointer}.pin:hover{filter:brightness(1.3)}
 @keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
 </style>
@@ -186,91 +180,100 @@ tr:hover{background:rgba(255,255,255,0.02)}
 <div class="flex items-center justify-center w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 p-1.5 shadow-inner">
 <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z" stroke="white" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 21V12M12 12L20 7.5M12 12L4 7.5" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
 </div>
-<div><span class="font-display text-3xl font-semibold tracking-tighter">AUSCLIMA</span>
-<div class="text-[10px] text-cyan-400/80 -mt-1 tracking-[2px]">HISTORICAL DATA AGGREGATOR</div></div></div>
-<div class="flex items-center gap-x-4">
-<select id="stn" class="bg-white/5 border border-white/10 rounded-2xl px-4 py-2 text-sm text-white cursor-pointer" style="min-width:200px"></select>
-<button id="load-btn" class="px-5 py-2 rounded-2xl text-sm font-medium bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg hover:shadow-cyan-500/25 transition-all">Load</button>
-<span class="text-xs text-white/60" id="rec-count"></span>
-<button id="status-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-2xl text-xs border border-white/10 bg-white/5"><span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-600"></span><span id="status-text" class="text-white/60">DB</span></button>
-</div></div></div></div>
+<div><span class="font-display text-3xl font-semibold tracking-tighter">AUSCLIMA</span><div class="text-[10px] text-cyan-400/80 -mt-1 tracking-[2px]">HISTORICAL DATA AGGREGATOR</div></div></div>
+<div class="flex items-center gap-x-2 bg-white/5 border border-white/10 rounded-3xl px-1.5 py-1.5">
+<button onclick="adjustTimeline(-1)" class="w-8 h-8 flex items-center justify-center text-cyan-400 hover:bg-white/10 rounded-2xl transition-colors"><i class="fa-solid fa-chevron-left text-sm"></i></button>
+<div class="px-5 text-center"><div class="text-xs text-white/60 tracking-widest">TIME HORIZON</div><div id="time-horizon" class="font-mono text-xl font-semibold tracking-tighter">1889 &mdash; 2024+</div></div>
+<button onclick="adjustTimeline(1)" class="w-8 h-8 flex items-center justify-center text-cyan-400 hover:bg-white/10 rounded-2xl transition-colors"><i class="fa-solid fa-chevron-right text-sm"></i></button>
+</div>
+<div class="flex items-center gap-x-3 bg-white/5 border border-white/10 rounded-3xl px-4 py-2">
+<div><div class="flex items-center gap-x-2"><span class="text-xs text-white/60 tracking-widest">DATABASE</span><span class="px-2 py-px rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono" id="db-status-badge">LIVE</span></div></div>
+<div class="ml-3 pl-3 border-l border-white/10"><span class="text-xs text-white/60 tracking-widest">RECORDS</span><div class="font-mono text-sm text-cyan-400" id="rec-count">748K</div></div>
+</div>
+</div></div></div>
 
 <div class="max-w-[1480px] mx-auto px-8 pt-6 pb-4">
 <div class="flex gap-6">
 <div class="w-56 flex-shrink-0">
 <div class="glass border border-white/10 rounded-3xl p-2">
-<div class="nav-item active flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1"><i class="fa-solid fa-th-large w-4 text-cyan-400"></i><span class="font-medium text-sm">DASHBOARD</span></div>
-<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-table w-4 text-white/70"></i><span class="font-medium text-sm">DATA TABLE</span></div>
-<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-calendar w-4 text-white/70"></i><span class="font-medium text-sm">CALENDAR</span></div>
-<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-chart-line w-4 text-white/70"></i><span class="font-medium text-sm">TRENDS</span></div>
-<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-temperature-high w-4 text-white/70"></i><span class="font-medium text-sm">RECORDS</span></div>
-<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl mb-1 hover:bg-white/5"><i class="fa-solid fa-chart-scatter w-4 text-white/70"></i><span class="font-medium text-sm">SCATTER</span></div>
-<div class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl hover:bg-white/5"><i class="fa-solid fa-arrows-left-right w-4 text-white/70"></i><span class="font-medium text-sm">COMPARE</span></div>
+<div class="nav-item active flex items-center gap-x-3" onclick="showView('dashboard')"><i class="fa-solid fa-th-large w-4 text-cyan-400"></i><span class="font-medium text-sm">DASHBOARD</span></div>
+<div class="nav-item flex items-center gap-x-3" onclick="showView('observations')"><i class="fa-solid fa-satellite w-4 text-white/70"></i><span class="font-medium text-sm">OBSERVATIONS</span></div>
+<div class="nav-item flex items-center gap-x-3" onclick="showView('extremes')"><i class="fa-solid fa-temperature-high w-4 text-white/70"></i><span class="font-medium text-sm">EXTREMES</span></div>
+<div class="nav-item flex items-center gap-x-3" onclick="showView('trends')"><i class="fa-solid fa-chart-line w-4 text-white/70"></i><span class="font-medium text-sm">TRENDS</span></div>
+<div class="nav-item flex items-center gap-x-3" onclick="showView('models')"><i class="fa-solid fa-brain w-4 text-white/70"></i><span class="font-medium text-sm">MODELS</span></div>
+<div class="nav-item flex items-center gap-x-3" onclick="showView('alerts')"><i class="fa-solid fa-bell w-4 text-white/70"></i><span class="font-medium text-sm">ALERTS</span></div>
+<div class="nav-item flex items-center gap-x-3" onclick="showView('datavault')"><i class="fa-solid fa-database w-4 text-white/70"></i><span class="font-medium text-sm">DATA VAULT</span></div>
+</div>
+<div class="mt-4 px-4"><div class="text-[10px] text-white/40 tracking-widest mb-2 px-1">SYSTEM STATUS</div>
+<div class="flex items-center justify-between text-xs bg-white/5 border border-white/10 rounded-2xl px-3 py-2"><div class="flex items-center gap-x-2"><i class="fa-solid fa-check-circle text-emerald-400"></i><span class="text-emerald-400 text-xs" id="sys-status">All systems nominal</span></div></div>
 </div></div>
 
 <div class="flex-1 min-w-0">
 <div class="relative border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl" style="height:560px;box-shadow:0 25px 60px -15px rgba(0,0,0,0.5),0 0 0 1px rgba(103,232,249,0.08) inset;background:#050d1a">
 <div class="absolute inset-0 bg-[radial-gradient(#1e3a5f_0.6px,transparent_1px)] bg-[length:3px_3px] opacity-60"></div>
 <svg id="map-svg" width="100%" height="100%" viewBox="0 0 900 620" class="absolute inset-0">
-<defs>
-<radialGradient id="globeGrad" cx="45%" cy="35%" r="75%" fx="40%" fy="30%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="55%" stop-color="#0f172a"/><stop offset="100%" stop-color="#020617"/></radialGradient>
-<linearGradient id="ausGrad" x1="30%" y1="20%" x2="75%" y2="85%"><stop offset="0%" stop-color="#f97316"/><stop offset="35%" stop-color="#fb923c"/><stop offset="65%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#e11d48"/></linearGradient>
-<filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-<filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>
-<ellipse cx="450" cy="310" rx="395" ry="275" fill="none" stroke="#67e8f9" stroke-width="3" opacity="0.12"/>
-<ellipse cx="450" cy="310" rx="375" ry="260" fill="none" stroke="#67e8f9" stroke-width="1.5" opacity="0.2"/>
+<defs><radialGradient id="globeGrad" cx="45%" cy="35%" r="75%" fx="40%" fy="30%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="55%" stop-color="#0f172a"/><stop offset="100%" stop-color="#020617"/></radialGradient><linearGradient id="ausGrad" x1="30%" y1="20%" x2="75%" y2="85%"><stop offset="0%" stop-color="#f97316"/><stop offset="35%" stop-color="#fb923c"/><stop offset="65%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#e11d48"/></linearGradient><filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<ellipse cx="450" cy="310" rx="395" ry="275" fill="none" stroke="#67e8f9" stroke-width="3" opacity="0.12"/><ellipse cx="450" cy="310" rx="375" ry="260" fill="none" stroke="#67e8f9" stroke-width="1.5" opacity="0.2"/>
 <ellipse cx="450" cy="310" rx="365" ry="255" fill="url(#globeGrad)" stroke="#334155" stroke-width="1"/>
-<g id="australia-group" class="australia-glow">
-<path id="aus-path" d="M 304 180 L 326 177 L 353 173 L 378 173 L 398 177 L 413 184 L 425 192 L 435 200 L 443 210 L 449 221 L 452 232 L 450 243 L 446 252 L 440 259 L 433 266 L 425 272 L 416 278 L 408 284 L 400 290 L 391 296 L 383 302 L 374 307 L 366 312 L 357 316 L 350 319 L 346 324 L 342 329 L 335 334 L 327 339 L 319 342 L 312 345 L 304 347 L 296 348 L 287 350 L 276 352 L 265 354 L 255 356 L 246 358 L 236 360 L 226 363 L 217 367 L 209 372 L 202 378 L 197 385 L 192 392 L 186 401 L 179 411 L 173 421 L 167 431 L 162 441 L 157 451 L 152 461 L 147 471 L 142 481 L 137 490 L 133 498 L 130 504 L 127 509 L 123 513 L 118 516 L 112 517 L 105 516 L 99 513 L 94 509 L 89 504 L 85 497 L 83 490 L 82 482 L 83 474 L 85 466 L 88 458 L 92 451 L 96 445 L 101 439 L 106 433 L 111 428 L 117 423 L 122 419 L 128 415 L 133 411 L 139 406 L 144 401 L 149 396 L 153 391 L 157 385 L 161 379 L 164 373 L 167 367 L 169 361 L 172 354 L 175 347 L 178 340 L 180 333 L 183 326 L 186 319 L 188 312 L 191 305 L 193 299 L 196 293 L 198 287 L 201 281 L 204 276 L 207 272 L 210 268 L 214 264 L 218 260 L 222 256 L 227 252 L 232 249 L 237 246 L 243 243 L 249 240 L 256 238 L 263 236 L 270 234 L 277 233 L 284 232 L 290 232 L 296 231 L 302 230 L 307 229 L 311 226 L 314 222 L 316 218 L 316 213 L 315 207 L 312 202 L 308 197 L 303 193 L 304 180 Z" fill="url(#ausGrad)" stroke="#bae6fd" stroke-width="2.5" filter="url(#neonGlow)"/>
-<ellipse cx="490" cy="550" rx="30" ry="20" fill="#67e8f9" stroke="#bae6fd" stroke-width="1.5" opacity="0.8"/>
-</g>
+<g id="aus-group"><path d="M 269.5 457.4 L 232.8 471.5 L 222.1 489.0 L 194.0 491.2 L 163.5 489.8 L 139.0 500.7 L 123.9 505.2 L 100.8 510.5 L 67.9 498.4 L 58.1 484.0 L 70.7 477.1 L 72.4 457.2 L 60.2 426.9 L 57.9 405.4 L 49.8 387.5 L 39.0 365.2 L 25.5 342.2 L 27.5 332.8 L 42.6 345.6 L 32.8 321.1 L 26.5 309.5 L 32.5 293.9 L 33.1 273.4 L 42.4 274.2 L 65.9 254.9 L 89.7 239.9 L 103.7 240.8 L 130.2 231.6 L 138.2 225.8 L 168.7 220.7 L 183.9 202.2 L 196.0 185.1 L 209.7 158.8 L 225.9 171.3 L 225.1 153.2 L 235.8 142.9 L 250.8 126.2 L 260.7 117.7 L 269.4 115.2 L 287.0 109.9 L 311.6 129.7 L 335.6 131.7 L 340.7 106.1 L 346.3 96.5 L 366.2 79.0 L 391.9 77.7 L 377.6 61.8 L 400.4 63.8 L 426.6 76.3 L 443.8 80.2 L 462.1 76.5 L 475.3 82.2 L 463.0 99.9 L 458.6 108.1 L 446.2 126.9 L 462.8 142.6 L 487.3 155.2 L 506.4 166.3 L 519.3 177.0 L 550.0 177.0 L 557.6 158.4 L 565.8 133.1 L 564.5 118.5 L 564.8 93.4 L 565.5 83.3 L 573.7 62.9 L 581.3 50.4 L 587.9 71.5 L 593.5 81.7 L 601.8 102.0 L 608.0 123.7 L 626.6 124.6 L 633.7 140.3 L 640.7 165.9 L 650.7 184.4 L 655.0 207.0 L 689.1 225.8 L 699.3 238.6 L 717.7 270.9 L 733.0 274.9 L 741.0 292.1 L 763.3 310.9 L 783.6 341.4 L 782.7 363.8 L 790.7 396.6 L 782.3 422.2 L 778.9 446.5 L 756.4 473.0 L 743.0 497.0 L 730.1 522.7 L 722.8 549.8 L 712.9 562.4 L 673.9 570.8 L 653.7 586.2 L 626.2 574.5 L 618.8 568.3 L 585.7 576.8 L 563.9 572.5 L 533.2 555.4 L 525.2 531.5 L 497.5 521.6 L 499.2 498.4 L 472.9 514.9 L 485.8 493.6 L 491.6 470.3 L 464.2 492.9 L 442.1 500.2 L 430.7 476.4 L 424.2 465.0 L 386.5 453.0 L 334.0 445.6 L 287.6 458.7 Z" fill="url(#ausGrad)" stroke="#bae6fd" stroke-width="2.5" filter="url(#neonGlow)"/></g>
+<g id="tas-group"><ellipse cx="520" cy="530" rx="28" ry="18" fill="#67e8f9" stroke="#bae6fd" stroke-width="1.5" opacity="0.7"/></g>
 <g id="pins-group"></g>
 </svg>
-<div id="map-loading" class="absolute inset-0 flex items-center justify-center text-white/40 text-sm">Loading stations...</div>
+<div id="map-loading" class="absolute inset-0 flex items-center justify-center text-white/40 text-sm">Mapping 20 stations...</div>
 </div></div>
 
 <div class="w-72 flex-shrink-0 space-y-3">
 <div class="glass border border-white/10 rounded-3xl p-4">
-<div class="flex items-center justify-between mb-3"><div class="section-header text-white/70">STATION DATA</div></div>
-<div id="station-metrics" class="space-y-2 text-sm">
-<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">TEMPERATURE</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="metric-temp">-</span></div>
-<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">RECORDS</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="metric-records">-</span></div>
-<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">YEAR RANGE</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="metric-years">-</span></div>
-<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/60">BASELINE</span><span class="font-mono text-cyan-400 font-semibold stat-value">1961-1990</span></div>
+<div class="flex items-center justify-between mb-3"><div class="section-header">AGGREGATED INSIGHTS</div><i class="fa-solid fa-sync-alt text-xs text-white/40 cursor-pointer hover:text-white/70" onclick="refreshInsights()"></i></div>
+<div class="space-y-2 text-sm">
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/70">TEMPERATURE</span><span class="font-mono text-emerald-400 font-semibold stat-value" id="insight-temp">+1.48&deg;C</span></div>
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/70">RECORDS LOADED</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="insight-records">0</span></div>
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/70">DATA RANGE</span><span class="font-mono text-amber-400 font-semibold stat-value" id="insight-range">-</span></div>
+<div class="metric-row flex justify-between items-center px-1 py-1 rounded-xl"><span class="text-white/70">STATION</span><span class="font-mono text-cyan-400 font-semibold stat-value" id="insight-station">-</span></div>
 </div></div>
 <div class="glass border border-white/10 rounded-3xl p-4">
-<div class="section-header text-white/70 mb-3">YEAR RANGE</div>
+<div class="section-header mb-3">DATA RESOLUTION</div>
+<div class="text-xs flex items-center gap-x-2 flex-wrap"><span class="px-3 py-1 bg-white/5 rounded-2xl border border-white/10">Daily</span><span class="px-3 py-1 bg-cyan-400/10 text-cyan-400 rounded-2xl border border-cyan-400/30">ACORN-SAT</span><span class="px-3 py-1 bg-white/5 rounded-2xl border border-white/10">BOM</span></div>
+</div>
+<div class="glass border border-white/10 rounded-3xl p-4">
+<div class="section-header mb-3">TEMPORAL NAVIGATOR</div>
 <div class="px-1 pt-2 pb-1">
-<input type="range" id="yr-s" min="1910" max="2024" value="2014" oninput="updateSlider()">
-<input type="range" id="yr-e" min="1910" max="2024" value="2024" oninput="updateSlider()" style="margin-top:2px">
-<div class="flex justify-between text-[10px] text-white/40 px-1 mt-1 font-mono"><span id="yl">1910</span><span id="yr-range" class="text-cyan-400">2014-2024</span><span id="yr">2024</span></div>
+<div class="flex justify-between text-xs text-white/60 mb-1"><span>1910</span><span id="tl-range" class="text-cyan-400 font-mono">2014-2024</span><span>2024</span></div>
+<div class="relative" style="height:36px">
+<input type="range" id="tl-s" min="1910" max="2024" value="2014" class="absolute top-0" style="z-index:2">
+<input type="range" id="tl-e" min="1910" max="2024" value="2024" class="absolute top-0" style="background:transparent;z-index:3">
+</div>
+<div class="flex justify-between text-[10px] text-white/40 px-1 mt-1 font-mono"><div>1910s</div><div>1960s</div><div>2000s</div></div>
 </div></div>
 <div class="glass border border-white/10 rounded-3xl p-4">
-<div class="section-header text-white/70 mb-3">DATABASE STATUS</div>
-<div class="flex items-center justify-between text-xs bg-white/5 border border-white/10 rounded-2xl px-3 py-2"><div class="flex items-center gap-x-2"><i class="fa-solid fa-check-circle text-emerald-400"></i><span class="text-emerald-400 text-xs" id="db-status">Checking...</span></div></div>
+<div class="section-header mb-3">SENSOR FUSION FEED</div>
+<div class="flex justify-center"><svg width="160" height="62" viewBox="0 0 160 62"><g fill="none" stroke="#64748b" stroke-width="1.25"><circle cx="25" cy="18" r="6" fill="#0f172a" stroke="#67e8f9"/><circle cx="80" cy="18" r="6" fill="#0f172a" stroke="#67e8f9"/><circle cx="135" cy="18" r="6" fill="#0f172a" stroke="#67e8f9"/><circle cx="52" cy="44" r="5.5" fill="#0f172a" stroke="#67e8f9"/><circle cx="108" cy="44" r="5.5" fill="#0f172a" stroke="#67e8f9"/><path d="M31 18 L74 18"/><path d="M86 18 L129 18"/><path d="M31 22 L46 39"/><path d="M129 22 L114 39"/><path d="M58 44 L102 44"/></g><text x="25" y="55" fill="#64748b" font-size="7" text-anchor="middle">STATIONS</text><text x="80" y="55" fill="#64748b" font-size="7" text-anchor="middle">SATELLITES</text><text x="135" y="55" fill="#64748b" font-size="7" text-anchor="middle">PROBES</text></svg></div>
+</div>
+<div class="glass border border-white/10 rounded-3xl p-4">
+<div class="section-header mb-3">PREDICTIVE PATTERN ENGINE</div>
+<div class="flex justify-center items-center h-[92px]"><svg width="92" height="92" viewBox="0 0 92 92"><defs><radialGradient id="coreGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0e7490"/></radialGradient></defs><g fill="#67e8f9" opacity="0.9"><path d="M46 12 Q58 28 46 44 Q34 28 46 12"/><path d="M72 24 Q78 40 64 50 Q58 34 72 24"/><path d="M72 68 Q78 52 64 42 Q58 58 72 68"/><path d="M46 80 Q34 64 46 48 Q58 64 46 80"/><path d="M20 68 Q14 52 28 42 Q34 58 20 68"/><path d="M20 24 Q14 40 28 50 Q34 34 20 24"/></g><circle cx="46" cy="46" r="11" fill="url(#coreGrad)"/><circle cx="46" cy="46" r="5.5" fill="#fff"/></svg></div>
+<div class="text-center text-[10px] text-cyan-400/70 mt-1 tracking-widest">PATTERN RECOGNITION ACTIVE</div>
 </div></div></div>
 
-<div class="mt-6"><div class="glass border border-white/10 rounded-3xl overflow-hidden">
-<div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
-<div><h3 class="font-display text-lg" id="table-title">Temperature Readings</h3><p class="text-xs text-white/50" id="table-sub">Select a station</p></div>
-<div class="flex gap-2" id="tabs">
-<button class="tab tab-active" data-view="table">Table</button>
-<button class="tab" data-view="anomaly">Anomaly</button>
-<button class="tab" data-view="calendar">Calendar</button>
-<button class="tab" data-view="monthly">Monthly</button>
-<button class="tab" data-view="records">Records</button>
+<div class="mt-6 grid grid-cols-12 gap-6">
+<div class="col-span-12 lg:col-span-5 glass border border-white/10 rounded-3xl p-4">
+<div class="flex items-center justify-between mb-3"><div><span class="section-header">DATA AGGREGATION ENGINE</span></div><div class="text-[10px] px-3 py-1 bg-white/5 rounded-2xl border border-white/10 text-white/60">LIVE</div></div>
+<div class="bg-[#020617] border border-white/10 rounded-2xl p-3">
+<canvas id="chart-wave" style="height:80px;width:100%"></canvas>
 </div>
-<div class="flex items-center gap-2"><button id="pp" class="px-3 py-1.5 rounded-xl bg-white/5 text-white/50 disabled:opacity-30 text-xs border border-white/10">&larr;</button><span id="pi" class="text-xs text-white/50 font-mono w-12 text-center">0</span><button id="np" class="px-3 py-1.5 rounded-xl bg-white/5 text-white/50 disabled:opacity-30 text-xs border border-white/10">&rarr;</button></div></div>
-<div id="views"><div id="v-table"><div id="tbl" class="overflow-x-auto"><div class="text-center py-16 text-white/30 text-sm">Click Load to view data</div></div></div>
-<div id="v-anomaly" class="hidden" style="height:350px"><canvas id="chart-anomaly"></canvas></div>
-<div id="v-calendar" class="hidden" style="height:350px"><canvas id="chart-cal"></canvas></div>
-<div id="v-monthly" class="hidden" style="height:350px"><canvas id="chart-monthly"></canvas></div>
-<div id="v-records" class="hidden"><div class="grid grid-cols-4 gap-4 p-4"><div style="height:180px"><canvas id="chart-rec-high"></canvas></div><div style="height:180px"><canvas id="chart-rec-low"></canvas></div><div style="height:180px"><canvas id="chart-rec-range"></canvas></div><div style="height:180px"><canvas id="chart-rec-hotdays"></canvas></div></div></div>
-</div></div></div></div>
+<div class="mt-2 text-[10px] text-white/40 px-1 flex items-center justify-between font-mono"><span id="agg-footer">20 STATIONS</span><span id="agg-count">748,696 RECORDS</span></div>
+</div>
+<div class="col-span-12 lg:col-span-7 glass border border-white/10 rounded-3xl p-4">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="section-header">OBSERVATIONS</div>
+<div class="flex items-center gap-2"><select id="stn" class="bg-white/5 border border-white/10 rounded-2xl px-3 py-1.5 text-xs text-white cursor-pointer"></select><button id="load-btn" class="px-3 py-1.5 rounded-2xl text-xs font-medium bg-gradient-to-r from-cyan-500 to-teal-500 text-white cursor-pointer">Load</button></div>
+<div class="font-mono text-xs bg-white/5 border border-white/10 px-3 py-1 rounded-2xl text-cyan-400" id="year-display">2024</div>
+</div>
+<div id="view-container" style="min-height:250px"><div id="tbl" class="overflow-x-auto"><div class="text-center py-16 text-white/30 text-sm">Select station and click Load</div></div></div>
+</div></div></div>
 
 <script>
-const PAGE=100;let raw=[],pg=0,stns=[],CH={};const $=id=>document.getElementById(id);
+const PAGE=50;let raw=[],pg=0,stns=[],CH={},currentView='table';const $=id=>document.getElementById(id);
 const DATA_STNS=["066214","086338","040842","009021","031011","014015","023000","094029","070351"];
 const PIN_POS={"066214":{x:578,y:226},"086338":{x:505,y:244},"040842":{x:590,y:178},"009021":{x:345,y:217},"031011":{x:555,y:120},"014015":{x:420,y:60},"023000":{x:470,y:230},"094029":{x:525,y:273},"070351":{x:545,y:235},"004032":{x:365,y:130},"032040":{x:565,y:145},"076031":{x:510,y:225},"037010":{x:485,y:140},"072150":{x:545,y:238},"015590":{x:440,y:160},"091311":{x:530,y:265},"039083":{x:570,y:175},"003003":{x:385,y:115},"012038":{x:395,y:200},"068072":{x:570,y:230}};
 
@@ -279,30 +282,19 @@ function drawMap(){
   const g=svg.querySelector('#pins-group');if(!g)return;
   g.innerHTML='';
   stns.forEach(s=>{
-    const pin=PIN_POS[s.id];if(!pin)return;
-    const has=DATA_STNS.includes(s.id);
+    const pin=PIN_POS[s.id];if(!pin||!DATA_STNS.includes(s.id))return;
     const c=document.createElementNS(ns,'circle');
     c.setAttribute('cx',pin.x);c.setAttribute('cy',pin.y);
-    c.setAttribute('r',has?'5':'3.5');
-    c.setAttribute('fill',has?'#67e8f9':'#64748b');
-    c.setAttribute('stroke','rgba(255,255,255,0.3)');
-    c.setAttribute('stroke-width','1.5');
-    c.setAttribute('class','pin');
-    c.dataset.id=s.id;
+    c.setAttribute('r','4.5');c.setAttribute('fill','#67e8f9');
+    c.setAttribute('stroke','rgba(255,255,255,0.3)');c.setAttribute('stroke-width','1.5');
+    c.setAttribute('class','pin');c.dataset.id=s.id;
     c.addEventListener('click',()=>selectStation(s.id));
     g.appendChild(c);
     const t=document.createElementNS(ns,'text');
     t.setAttribute('x',pin.x);t.setAttribute('y',pin.y-10);
-    t.setAttribute('fill','#94a3b8');t.setAttribute('font-size','9');
+    t.setAttribute('fill','#94a3b8');t.setAttribute('font-size','8');
     t.setAttribute('text-anchor','middle');
     t.textContent=s.name.split('(')[0].trim();
-    g.appendChild(t);
-  });
-  [{n:'Sydney',x:578,y:244},{n:'Perth',x:345,y:235},{n:'Melbourne',x:505,y:262},{n:'Darwin',x:420,y:78},{n:'Brisbane',x:590,y:196},{n:'Adelaide',x:470,y:248},{n:'Hobart',x:525,y:290}].forEach(c=>{
-    const t=document.createElementNS(ns,'text');
-    t.setAttribute('x',c.x);t.setAttribute('y',c.y);
-    t.setAttribute('fill','rgba(255,255,255,0.08)');t.setAttribute('font-size','10');
-    t.setAttribute('text-anchor','middle');t.textContent=c.n;
     g.appendChild(t);
   });
   $('map-loading').classList.add('hidden');
@@ -310,130 +302,67 @@ function drawMap(){
 
 async function selectStation(id){
   $('stn').value=id;
-  const f=$('yr-s').value+'-01-01',t=$('yr-e').value+'-12-31';
+  const f=$('tl-s').value+'-01-01',t=$('tl-e').value+'-12-31';
   try{
-    const r=await fetch(`/api/data/${id}?from=${f}&to=${t}&limit=50000`);
-    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||`HTTP ${r.status}`);
-    raw=await r.json();if(raw.error)throw new Error(raw.error);pg=0;
-    const name=$('stn').selectedOptions[0]?.text||id;
-    $('table-title').textContent=name;$('table-sub').textContent=raw.length?`${raw.length.toLocaleString()} readings`:'No data';
-    const mn=raw.reduce((a,b)=>Math.max(a,b.tmax||0),0);
-    $('metric-temp').textContent=mn?mn.toFixed(1)+'\u00b0C max':'-';
-    $('metric-records').textContent=raw.length.toLocaleString();
-    if(raw[0])$('metric-years').textContent=raw[0].d.slice(0,4)+'-'+raw[raw.length-1].d.slice(0,4);
-    renderAll();
-  }catch(e){$('error')&&($('error').textContent=e.message)};
+    const r=await fetch(`/api/data/${id}?from=${f}&to=${t}&limit=100000`);
+    if(!r.ok)throw new Error();
+    raw=await r.json();if(raw.error)throw new Error();pg=0;
+    const n=$('stn').selectedOptions[0]?.text||id;
+    $('insight-records').textContent=raw.length.toLocaleString();
+    $('insight-station').textContent=n.split('(')[0].trim();
+    if(raw.length){const mx=raw.reduce((a,b)=>Math.max(a,b.tmax||0),0);$('insight-temp').textContent='+'+mx.toFixed(1)+'\u00b0C max'}
+    if(raw[0])$('insight-range').textContent=raw[0].d.slice(0,4)+' - '+raw[raw.length-1].d.slice(0,4);
+    renderTable();renderWave();
+  }catch(e){$('insight-records').textContent='Error'}
 }
 
-function renderAll(){
-  Object.values(CH).forEach(c=>{try{c.destroy()}catch(e){}});
-  if(!raw.length)return;
-  renderTable();renderAnomaly();renderCalendar();renderMonthly();renderRecords();
+function refreshInsights(){
+  const metrics=document.querySelectorAll('.metric-row .stat-value');
+  metrics.forEach((m,i)=>{setTimeout(()=>{m.style.transform='scale(1.1)';setTimeout(()=>{m.style.transform='scale(1)'},180)},i*80)});
 }
 
-function updateSlider(){
-  const s=parseInt($('yr-s').value),e=parseInt($('yr-e').value);
-  if(s>e){$('yr-s').value=e;$('yr-e').value=s;}
-  $('yl').textContent=$('yr-s').value;$('yr').textContent=$('yr-e').value;
-  $('yr-range').textContent=$('yr-s').value+'-'+$('yr-e').value;
+function showView(view){
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  if(view==='dashboard')renderTable();
 }
 
 function renderTable(){
-  if(!raw.length){$('tbl').innerHTML='<div class="text-center py-16 text-white/30 text-sm">No data</div>';$('pp').disabled=true;$('np').disabled=true;$('pi').textContent='0';return}
+  if(!raw.length){$('tbl').innerHTML='<div class="text-center py-16 text-white/30 text-sm">No data</div>';return}
   const tp=Math.ceil(raw.length/PAGE),s=pg*PAGE,e=Math.min(s+PAGE,raw.length),p=raw.slice(s,e);
-  $('pp').disabled=pg<=0;$('np').disabled=pg>=tp-1;$('pi').textContent=`${pg+1}/${tp}`;
-  $('tbl').innerHTML=`<table><thead><tr><th>Date</th><th style="text-align:right">Max</th><th style="text-align:right">Min</th></tr></thead><tbody>${p.map(d=>`<tr><td>${d.d}</td><td style="text-align:right;color:${d.tmax!=null?'#fb923c':'#333'}">${d.tmax!=null?d.tmax.toFixed(1)+'\u00b0':'-'}</td><td style="text-align:right;color:${d.tmin!=null?'#67e8f9':'#333'}">${d.tmin!=null?d.tmin.toFixed(1)+'\u00b0':'-'}</td></tr>`).join('')}</tbody></table><div style="text-align:center;color:#64748b;padding:12px;font-family:monospace;font-size:12px">${s+1}\u2013${e} of ${raw.length.toLocaleString()}</div>`;
+  $('tbl').innerHTML=`<table class="w-full text-xs"><thead><tr class="text-white/40 border-b border-white/5"><th class="text-left py-2 px-3 font-medium">Date</th><th class="text-right py-2 px-3 font-medium">Max</th><th class="text-right py-2 px-3 font-medium">Min</th></tr></thead><tbody>${p.map(d=>`<tr class="border-b border-white/5 hover:bg-white/5"><td class="py-1.5 px-3 text-white/70 font-mono">${d.d}</td><td class="py-1.5 px-3 text-right font-mono ${d.tmax!=null?'text-orange-400':'text-white/20'}">${d.tmax!=null?d.tmax.toFixed(1)+'\u00b0':'-'}</td><td class="py-1.5 px-3 text-right font-mono ${d.tmin!=null?'text-cyan-400':'text-white/20'}">${d.tmin!=null?d.tmin.toFixed(1)+'\u00b0':'-'}</td></tr>`).join('')}</tbody></table><div class="text-center text-white/40 py-2 font-mono text-[10px]">${s+1}\u2013${e} of ${raw.length.toLocaleString()}</div><div class="flex justify-center gap-2 pb-2"><button id="pp" class="px-3 py-1 rounded-xl bg-white/5 text-white/50 disabled:opacity-30 text-xs border border-white/10">&larr;</button><span class="text-xs text-white/50 font-mono px-2 py-1">${pg+1}/${tp}</span><button id="np" class="px-3 py-1 rounded-xl bg-white/5 text-white/50 disabled:opacity-30 text-xs border border-white/10">&rarr;</button></div>`;
+  $('pp').addEventListener('click',()=>{if(pg>0){pg--;renderTable()}});
+  $('np').addEventListener('click',()=>{if((pg+1)*PAGE<raw.length){pg++;renderTable()}});
 }
 
-function renderAnomaly(){
-  const mode='tmax',years={};
-  raw.forEach(d=>{const y=d.d.slice(0,4);years[y]=years[y]||[];if(d[mode]!=null)years[y].push(d[mode])});
-  const ys=Object.keys(years).sort(),annual=ys.map(y=>years[y].reduce((a,b)=>a+b,0)/years[y].length);
-  const bs=ys.filter(y=>y>='1961'&&y<='1990');
-  const bv=bs.length?bs.reduce((s,y)=>s+annual[ys.indexOf(y)],0)/bs.length:annual.reduce((a,b)=>a+b,0)/annual.length;
-  const anom=annual.map(v=>v-bv),mx=Math.max(...anom.map(Math.abs))||1;
-  const colors=anom.map(v=>v>=0?`rgba(239,68,68,${Math.min(1,v/mx*1.5)})`:`rgba(59,130,246,${Math.min(1,Math.abs(v)/mx*1.5)})`);
-  CH.anomaly=new Chart($('chart-anomaly'),{type:'bar',data:{labels:ys,datasets:[{data:anom,backgroundColor:colors,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,0.95)',titleColor:'#e4e4e7',bodyColor:'#a1a1aa',padding:12,cornerRadius:8,displayColors:false,callbacks:{label:ctx=>`${ctx.parsed.y>0?'+':''}${ctx.parsed.y.toFixed(2)}\u00b0C`}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11},maxTicksLimit:20}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:11},callback:v=>v+'\u00b0'}}}}});
+function renderWave(){
+  if(CH.wave)CH.wave.destroy();
+  if(!raw.length)return;
+  const data=raw.slice(-200).map(d=>d.tmax||0);
+  const labels=raw.slice(-200).map(d=>d.d.slice(5,10));
+  CH.wave=new Chart($('chart-wave'),{type:'line',data:{labels,datasets:[{data,borderColor:'#c026ff',backgroundColor:'rgba(192,38,255,0.05)',fill:true,pointRadius:0,tension:0.4,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,grid:{display:false}}}}});
+  CH.wave2=new Chart($('chart-wave2'),{type:'line',data:{labels,datasets:[{data,borderColor:'#67e8f9',backgroundColor:'rgba(103,232,249,0.05)',fill:true,pointRadius:0,tension:0.4,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
 }
 
-function renderCalendar(){
-  const byMonth={};
-  raw.forEach(d=>{if(d.tmax==null)return;const m=d.d.slice(0,7);byMonth[m]=byMonth[m]||[];byMonth[m].push(d.tmax)});
-  const allMonths=Object.keys(byMonth).sort().slice(-36);
-  const data=allMonths.map(m=>byMonth[m].reduce((a,b)=>a+b,0)/byMonth[m].length);
-  const labels=allMonths.map(m=>{const d=new Date(m+'-01');return d.toLocaleString('default',{month:'short'})+" '"+m.slice(2,4)});
-  const cmax=Math.max(...data),cmin=Math.min(...data);
-  CH.cal=new Chart($('chart-cal'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>{const t=(v-cmin)/(cmax-cmin||1);return`rgb(${Math.round(26+t*170)},${Math.round(109+t*(-109+150))},${Math.round(93+t*(-93+60))})`}),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10},maxTicksLimit:36}},y:{display:false,grid:{display:false}}}}});
+function updateTimeline(){
+  const s=parseInt($('tl-s').value),e=parseInt($('tl-e').value);
+  if(s>e){$('tl-s').value=e;$('tl-e').value=s;}
+  $('tl-range').textContent=$('tl-s').value+'-'+$('tl-e').value;
 }
-
-function renderMonthly(){
-  const byMonth={};
-  raw.forEach(d=>{if(d.tmax==null)return;const m=parseInt(d.d.slice(5,7)),y=parseInt(d.d.slice(0,4));byMonth[m]=byMonth[m]||{years:{}};byMonth[m].years[y]=byMonth[m].years[y]||[];byMonth[m].years[y].push(d.tmax)});
-  const mnths=Array.from({length:12},(_,i)=>new Date(2000,i).toLocaleString('default',{month:'short'}));
-  const means=mnths.map((_,i)=>{const v=Object.values(byMonth[i+1]?.years||{}).flatMap(v=>v.reduce((a,b)=>a+b,0)/v.length);return v.reduce((a,b)=>a+b,0)/v.length});
-  const maxes=mnths.map((_,i)=>{const v=Object.entries(byMonth[i+1]?.years||{}).map(([y,v])=>({y,avg:v.reduce((a,b)=>a+b,0)/v.length}));return Math.max(...v.map(a=>a.avg))});
-  const mins=mnths.map((_,i)=>{const v=Object.entries(byMonth[i+1]?.years||{}).map(([y,v])=>({y,avg:v.reduce((a,b)=>a+b,0)/v.length}));return Math.min(...v.map(a=>a.avg))});
-  CH.monthly=new Chart($('chart-monthly'),{type:'line',data:{labels:mnths,datasets:[{label:'Avg',data:means,borderColor:'#67e8f9',backgroundColor:'rgba(103,232,249,0.06)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#67e8f9'},{label:'Max',data:maxes,borderColor:'#fb923c',borderDash:[4,3],pointRadius:0,tension:0.4},{label:'Min',data:mins,borderColor:'#38bdf8',borderDash:[4,3],pointRadius:0,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#a1a1aa',font:{size:11},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:11}}}}}});
-}
-
-function renderRecords(){
-  const byYear={};
-  raw.forEach(d=>{const y=d.d.slice(0,4);if(d.tmax==null)return;byYear[y]=byYear[y]||[];byYear[y].push(d.tmax)});
-  const decades={};
-  Object.entries(byYear).forEach(([y,vals])=>{const d=Math.floor(parseInt(y)/10)*10;decades[d]=decades[d]||{years:{}};decades[d].years[y]=vals});
-  const dk=Object.keys(decades).sort(),dl=dk.map(d=>`${d}s`);
-  CH.recH=new Chart($('chart-rec-high'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.max(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(239,68,68,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
-  CH.recL=new Chart($('chart-rec-low'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map(dk=>Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(59,130,246,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
-  CH.recR=new Chart($('chart-rec-range'),{type:'bar',data:{labels:dl,datasets:[{data:dk.map((dk,i)=>Math.max(...Object.values(decades[dk].years).flat())-Math.min(...Object.values(decades[dk].years).flat())),backgroundColor:'rgba(168,85,247,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
-  const hotDays={};
-  Object.entries(byYear).forEach(([y,vals])=>{hotDays[y]=vals.filter(v=>v>35).length});
-  const hd=Object.entries(hotDays).sort((a,b)=>a[0]-b[0]);
-  CH.hotD=new Chart($('chart-rec-hotdays'),{type:'line',data:{labels:hd.map(h=>h[0]),datasets:[{data:hd.map(h=>h[1]),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.06)',fill:true,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10},maxTicksLimit:15}},y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#64748b',font:{size:10}}}}}});
-}
+function adjustTimeline(d){const s=$('tl-s'),e=$('tl-e');let v=parseInt(e.value)+d;v=Math.max(1910,Math.min(2024,v));e.value=v;if(parseInt(s.value)>v)s.value=v;updateTimeline()}
 
 $('load-btn').addEventListener('click',()=>{const sid=$('stn').value;if(sid)selectStation(sid)});
-$('pp').addEventListener('click',()=>{if(pg>0){pg--;renderTable()}});
-$('np').addEventListener('click',()=>{if((pg+1)*PAGE<raw.length){pg++;renderTable()}});
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){
-  document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('tab-active')});
-  this.classList.add('tab-active');
-  document.querySelectorAll('#views>div').forEach(v=>v.classList.add('hidden'));
-  const target=document.getElementById('v-'+this.dataset.view);
-  if(target)target.classList.remove('hidden');
-  setTimeout(()=>renderAll(),100);
-}));
-document.querySelectorAll('.nav-item').forEach((item,idx)=>{
-  item.addEventListener('click',function(){
-    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
-    this.classList.add('active');
-    const views=['table','table','calendar','monthly','records','scatter','compare'];
-    const t=document.querySelector(`.tab[data-view="${views[idx]}"]`);
-    if(t)t.click();
-  });
-});
-
-async function checkHealth(){
-  try{
-    const h=await(await fetch('/api/health')).json();
-    if(h.database?.connected){
-      $('status-dot').className='w-1.5 h-1.5 rounded-full bg-emerald-500';$('status-text').textContent='Connected';
-      $('db-status').textContent='All systems nominal';
-      const c=await(await fetch('/api/counts')).json();
-      $('rec-count').textContent=Object.values(c).reduce((a,b)=>a+b,0).toLocaleString()+' records';
-    }
-  }catch(e){}
-}
+['tl-s','tl-e'].forEach(id=>{$(id).addEventListener('input',updateTimeline)});
 
 async function init(){
-  $('yr-s').value=2014;$('yr-e').value=2024;updateSlider();
-  checkHealth();
+  $('tl-s').value=2014;$('tl-e').value=2024;updateTimeline();
   try{
     stns=await(await fetch('/api/stations')).json();
     if(stns.error)throw new Error(stns.error);
     const sel=$('stn');sel.innerHTML=stns.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
     const gs=stns.find(s=>DATA_STNS.includes(s.id));if(gs)sel.value=gs.id;
     drawMap();
-  }catch(e){$('error')&&($('error').textContent=e.message)}
+  }catch(e){}
 }
 init();
 </script>
