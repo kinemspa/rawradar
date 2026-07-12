@@ -178,7 +178,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 <div class="flex items-center gap-4"><span class="text-xs text-zinc-600" id="rec-count"></span><button id="status-btn" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border border-zinc-800" style="background:rgba(24,24,27,0.5)"><span class="w-1.5 h-1.5 rounded-full bg-zinc-600" id="status-dot"></span><span id="status-text" class="text-zinc-400">DB</span></button></div>
 </header>
 
-<div class="flex-1 p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
+<div class="flex-1 p-6 lg:p-10 max-w-[95vw] mx-auto w-full">
 <div id="error" class="hidden bg-red-900/30 border border-red-500/20 rounded-3xl p-4 mb-6 text-sm text-red-300"></div>
 
 <div id="map-section" class="glass rounded-3xl p-6 lg:p-8 mb-6" style="background:linear-gradient(135deg,rgba(6,6,20,0.9),rgba(10,10,30,0.9))">
